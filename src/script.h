@@ -650,15 +650,17 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream &s, int nType, int nVersion) {
-        unsigned int nSize = 0;
-        s >> VARINT(nSize);
-        if (nSize < nSpecialScripts) {
-            std::vector<unsigned char> vch(GetSpecialSize(nSize), 0x00);
-            s >> REF(CFlatData(&vch[0], &vch[vch.size()]));
-            Decompress(nSize, vch);
-            return;
+void Unserialize(Stream &s, int nType, int nVersion) {
+    unsigned int nSize = 0;
+    s >> VARINT(nSize);
+    if (nSize < nSpecialScripts) {
+        std::vector<unsigned char> vch(GetSpecialSize(nSize), 0x00);
+        if (!vch.empty()) {
+            s >> REF(CFlatData(&vch[0], &vch[vch.size() - 1] + 1));
         }
+        Decompress(nSize, vch);
+        return;
+    }
         nSize -= nSpecialScripts;
         script.resize(nSize);
         s >> REF(CFlatData(&script[0], &script[script.size()]));

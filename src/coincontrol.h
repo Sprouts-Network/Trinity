@@ -4,6 +4,10 @@
 #ifndef COINCONTROL_H
 #define COINCONTROL_H
 
+// Coin control defaults
+static const int DEFAULT_CONFIRM_TARGET = 6;     // Default: 6 blocks (~15 minutes for 2.5 min blocks)
+static const int64 DEFAULT_MIN_FEE_RATE = 1000;  // Minimum 1000 satoshis per KB
+
 /** Coin Control Features with Advanced Fee Analysis. */
 class CCoinControl
 {
@@ -34,7 +38,7 @@ public:
         setSelected.clear();
         fUseCustomFee = false;
         nCustomFeeRate = 0;
-        nConfirmTarget = 6;  // Default: 6 blocks (~1 hour)
+        nConfirmTarget = DEFAULT_CONFIRM_TARGET;
         fAllowOtherInputs = true;
         fAllowWatchOnly = false;
         nEstimatedFee = 0;

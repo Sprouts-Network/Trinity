@@ -418,6 +418,10 @@ int LogPrintf(const char* pszFormat, ...)
 
 int LogPrint(const char* category, const char* pszFormat, ...)
 {
+    // Check for null or empty category
+    if (!category || category[0] == '\0')
+        return 0;
+        
     // Check if category is enabled
     if (!fDebug && mapDebugCategories.count(category) == 0) {
         return 0;

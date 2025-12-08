@@ -13,6 +13,10 @@
 using namespace std;
 
 // Fee estimation constants
+static const int64 DEFAULT_MIN_FEE_RATE = 1000;    // Minimum fee rate (1000 sat/KB)
+static const int64 DEFAULT_FEE_RATE = 20000;       // Default fee rate (20000 sat/KB)
+
+// Block confirmation targets
 static const int FEE_CONFIRM_NEXT_BLOCK = 1;
 static const int FEE_CONFIRM_FAST = 3;
 static const int FEE_CONFIRM_STANDARD = 6;
@@ -27,7 +31,7 @@ static const int FEE_LOW_NUM = 3;
 static const int FEE_LOW_DEN = 4;          // 0.75x for economy
 
 CBlockPolicyEstimator::CBlockPolicyEstimator(int64 minFeeRate)
-    : nMinFeeRate(minFeeRate), nDefaultFeeRate(20000)
+    : nMinFeeRate(minFeeRate), nDefaultFeeRate(DEFAULT_FEE_RATE)
 {
 }
 

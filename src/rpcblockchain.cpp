@@ -6,6 +6,7 @@
 #include "main.h"
 #include "bitcoinrpc.h"
 #include "core.h"
+#include "fees.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -110,19 +111,8 @@ Value estimatefee(const Array& params, bool fHelp)
     if (nBlocks < 1)
         nBlocks = 1;
     
-    // Note: This requires fees.h to be included
-    // For now, return a basic estimate
-    int64 nFeeRate = 20000; // Default 20000 satoshis per KB
-    
-    // Adjust based on confirmation target
-    if (nBlocks <= 1)
-        nFeeRate = 30000;  // Premium for next block
-    else if (nBlocks <= 3)
-        nFeeRate = 25000;  // Higher for fast confirmation
-    else if (nBlocks <= 6)
-        nFeeRate = 20000;  // Standard rate
-    else
-        nFeeRate = 15000;  // Lower for slower confirmation
+    // Use the fee estimator
+    int64 nFeeRate = feeEstimator.EstimateFee(nBlocks);
     
     Object result;
     result.push_back(Pair("feerate", nFeeRate));

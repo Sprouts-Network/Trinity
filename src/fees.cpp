@@ -12,6 +12,20 @@
 
 using namespace std;
 
+// Fee estimation constants
+static const int FEE_CONFIRM_NEXT_BLOCK = 1;
+static const int FEE_CONFIRM_FAST = 3;
+static const int FEE_CONFIRM_STANDARD = 6;
+static const int FEE_CONFIRM_ECONOMY = 12;
+
+// Fee multipliers (as fractions: numerator/denominator)
+static const int FEE_PREMIUM_NUM = 3;
+static const int FEE_PREMIUM_DEN = 2;      // 1.5x for next block
+static const int FEE_HIGH_NUM = 5;
+static const int FEE_HIGH_DEN = 4;         // 1.25x for fast confirmation
+static const int FEE_LOW_NUM = 3;
+static const int FEE_LOW_DEN = 4;          // 0.75x for economy
+
 CBlockPolicyEstimator::CBlockPolicyEstimator(int64 minFeeRate)
     : nMinFeeRate(minFeeRate), nDefaultFeeRate(20000)
 {
@@ -98,18 +112,18 @@ int64 CBlockPolicyEstimator::EstimateFee(int nBlocks) const
     // Faster confirmation = higher fee
     int64 nEstimate = nMedianFee;
     
-    if (nBlocks <= 1) {
-        // Next block - add 50% premium
-        nEstimate = nMedianFee * 3 / 2;
-    } else if (nBlocks <= 3) {
-        // Within 3 blocks - add 25% premium  
-        nEstimate = nMedianFee * 5 / 4;
-    } else if (nBlocks <= 6) {
-        // Within 6 blocks - use median
+    if (nBlocks <= FEE_CONFIRM_NEXT_BLOCK) {
+        // Next block - add premium
+        nEstimate = nMedianFee * FEE_PREMIUM_NUM / FEE_PREMIUM_DEN;
+    } else if (nBlocks <= FEE_CONFIRM_FAST) {
+        // Fast confirmation - add moderate premium
+        nEstimate = nMedianFee * FEE_HIGH_NUM / FEE_HIGH_DEN;
+    } else if (nBlocks <= FEE_CONFIRM_STANDARD) {
+        // Standard confirmation - use median
         nEstimate = nMedianFee;
     } else {
-        // More than 6 blocks - can use lower fee
-        nEstimate = nMedianFee * 3 / 4;
+        // Economy confirmation - can use lower fee
+        nEstimate = nMedianFee * FEE_LOW_NUM / FEE_LOW_DEN;
     }
     
     // Ensure minimum
@@ -127,17 +141,17 @@ int CBlockPolicyEstimator::EstimateConfirmationTime(int64 nFeeRate) const
     if (nFeeRate < nMinFeeRate)
         return 25;  // Maximum blocks we track
     
-    int64 nMedianFee = CalculateMedianFee(6);
+    int64 nMedianFee = CalculateMedianFee(FEE_CONFIRM_STANDARD);
     
-    // Estimate confirmation time based on fee rate
-    if (nFeeRate >= nMedianFee * 3 / 2) {
-        return 1;  // Next block
-    } else if (nFeeRate >= nMedianFee * 5 / 4) {
-        return 3;  // Within 3 blocks
+    // Estimate confirmation time based on fee rate relative to median
+    if (nFeeRate >= nMedianFee * FEE_PREMIUM_NUM / FEE_PREMIUM_DEN) {
+        return FEE_CONFIRM_NEXT_BLOCK;
+    } else if (nFeeRate >= nMedianFee * FEE_HIGH_NUM / FEE_HIGH_DEN) {
+        return FEE_CONFIRM_FAST;
     } else if (nFeeRate >= nMedianFee) {
-        return 6;  // Within 6 blocks  
-    } else if (nFeeRate >= nMedianFee * 3 / 4) {
-        return 12; // Within 12 blocks
+        return FEE_CONFIRM_STANDARD;
+    } else if (nFeeRate >= nMedianFee * FEE_LOW_NUM / FEE_LOW_DEN) {
+        return FEE_CONFIRM_ECONOMY;
     } else {
         return 25; // More than 25 blocks
     }

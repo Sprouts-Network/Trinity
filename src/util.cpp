@@ -220,10 +220,18 @@ void GetStrongRandBytes(unsigned char* buf, int num)
         #ifndef WIN32
         FILE* f = fopen("/dev/urandom", "r");
         if (f) {
-            if (fread(buf, 1, num, f) != (size_t)num) {
-                LogPrintf("GetStrongRandBytes: Failed to read from /dev/urandom.\n");
-            }
+            size_t bytesRead = fread(buf, 1, num, f);
             fclose(f);
+            if (bytesRead != (size_t)num) {
+                // Critical failure - could not get random bytes
+                LogPrintf("GetStrongRandBytes: Failed to read %d bytes from /dev/urandom (got %zu).\n", num, bytesRead);
+                // As a last resort, mix in some data, but this is not ideal
+                for (int i = 0; i < num; i++) {
+                    buf[i] ^= (GetTime() >> (i % 8)) & 0xFF;
+                }
+            }
+        } else {
+            LogPrintf("GetStrongRandBytes: Failed to open /dev/urandom.\n");
         }
         #endif
     }

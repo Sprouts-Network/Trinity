@@ -1639,6 +1639,36 @@ std::string FormatSubVersion(const std::string& name, int nClientVersion, const 
     return ss.str();
 }
 
+std::string SanitizeString(const std::string& str)
+{
+    /**
+    * Sanitize a string to prevent any potentially dangerous characters
+    * that could be used in injection attacks or cause parsing issues.
+    * This is a non-consensus change that improves security.
+    */
+    std::string strResult;
+    strResult.reserve(str.size());
+    for (std::string::const_iterator it = str.begin(); it != str.end(); ++it)
+    {
+        if (*it >= 0x20 && *it < 0x7f)
+        {
+            // Allow printable ASCII characters
+            strResult += *it;
+        }
+        else if (*it == '\n' || *it == '\r' || *it == '\t')
+        {
+            // Allow common whitespace
+            strResult += *it;
+        }
+        else
+        {
+            // Replace other characters with '?'
+            strResult += '?';
+        }
+    }
+    return strResult;
+}
+
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate)
 {

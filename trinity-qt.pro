@@ -229,6 +229,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/limitedmap.h \
     src/qt/splashscreen.h \
     src/qt/intro.h \
+    src/qt/createwalletdialog.h \
     src/scrypt.h \
     src/sph_blake.h \
     src/sph_groestl.h \
@@ -313,6 +314,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/txdb.cpp \
     src/qt/splashscreen.cpp \
     src/qt/intro.cpp \
+    src/qt/createwalletdialog.cpp \
     src/scrypt.cpp \
     src/blake.c \
     src/bmw.c \
@@ -339,7 +341,8 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/askpassphrasedialog.ui \
     src/qt/forms/rpcconsole.ui \
     src/qt/forms/optionsdialog.ui \
-    src/qt/forms/intro.ui
+    src/qt/forms/intro.ui \
+    src/qt/forms/createwalletdialog.ui
 
 contains(USE_QRCODE, 1) {
 HEADERS += src/qt/qrcodedialog.h

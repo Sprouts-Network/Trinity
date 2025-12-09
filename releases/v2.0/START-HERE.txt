@@ -1,0 +1,115 @@
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║     Trinity v2.0 Windows Release                         ║
+║     Start Here!                                           ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+Welcome to Trinity v2.0! This package contains everything you need
+to build Trinity for Windows.
+
+┌───────────────────────────────────────────────────────────┐
+│ QUICK START                                               │
+└───────────────────────────────────────────────────────────┘
+
+1. Read QUICKSTART.md for fast-track build instructions
+2. Download trinity-2.0.0-win64-build-kit.zip
+3. Follow the build steps in QUICKSTART.md
+4. Result: trinity-qt.exe (Windows executable)
+
+┌───────────────────────────────────────────────────────────┐
+│ FILES IN THIS RELEASE                                     │
+└───────────────────────────────────────────────────────────┘
+
+[BUILD KITS]
+  trinity-2.0.0-win64-build-kit.zip  - Complete build package
+  trinity-2.0.0-src.tar.gz           - Source code only
+
+[DOCUMENTATION]
+  QUICKSTART.md         - Fast build guide (START HERE!)
+  RELEASE-NOTES.md      - What's new in v2.0
+  BUILDING.txt          - Detailed build instructions
+  DELIVERY-SUMMARY.md   - What was delivered
+  README.txt            - Package overview
+  MANIFEST.txt          - File listing
+
+[BUILD TOOLS]
+  build-windows-exe.sh  - Automated build script
+
+[VERIFICATION]
+  SHA256SUMS.txt        - File checksums
+  VERSION.txt           - Version information
+
+┌───────────────────────────────────────────────────────────┐
+│ WHAT'S NEW IN v2.0                                        │
+└───────────────────────────────────────────────────────────┘
+
+✓ BIP39 seed phrase generation for wallet security
+✓ Dark/Light theme support for better UX
+✓ Modern wallet creation dialog
+✓ Enhanced UI components throughout
+✓ Comprehensive build infrastructure
+✓ Full cross-platform support
+
+┌───────────────────────────────────────────────────────────┐
+│ BUILDING THE WINDOWS EXECUTABLE                           │
+└───────────────────────────────────────────────────────────┘
+
+METHOD 1: Quick Build (Recommended)
+  - See QUICKSTART.md for step-by-step guide
+  - Requires pre-built Windows dependencies
+  - Time: ~30 minutes setup + 15 minutes build
+
+METHOD 2: Docker Build
+  - Uses containerized environment
+  - See Dockerfile.windows in source
+  - Time: ~1 hour setup, then automated
+
+METHOD 3: From Source
+  - Build all dependencies from scratch
+  - See BUILDING.txt for complete guide
+  - Time: 2-4 hours for first build
+
+┌───────────────────────────────────────────────────────────┐
+│ REQUIREMENTS                                              │
+└───────────────────────────────────────────────────────────┘
+
+To build, you need Windows versions of:
+  - Qt 5.x (MinGW build)
+  - Boost 1.50+
+  - BerkeleyDB 4.8
+  - OpenSSL 1.0.x
+  - MinGW-w64 compiler
+
+See QUICKSTART.md for where to get these.
+
+┌───────────────────────────────────────────────────────────┐
+│ SUPPORT                                                   │
+└───────────────────────────────────────────────────────────┘
+
+GitHub: https://github.com/Sprouts-Network/Trinity
+Issues: https://github.com/Sprouts-Network/Trinity/issues
+Docs:   See RELEASE-NOTES.md and BUILDING.txt
+
+┌───────────────────────────────────────────────────────────┐
+│ VERIFY YOUR DOWNLOAD                                      │
+└───────────────────────────────────────────────────────────┘
+
+Before building, verify file integrity:
+  sha256sum -c SHA256SUMS.txt
+
+All files should show "OK".
+
+┌───────────────────────────────────────────────────────────┐
+│ LICENSE                                                   │
+└───────────────────────────────────────────────────────────┘
+
+Trinity is released under the MIT License.
+See COPYING in the source package.
+
+═══════════════════════════════════════════════════════════
+
+Ready to build Trinity v2.0!
+Start with QUICKSTART.md
+
+═══════════════════════════════════════════════════════════

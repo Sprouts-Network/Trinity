@@ -19,20 +19,54 @@ Files in this release:
    - Complete source code only
    - For Linux/Mac builds or custom Windows builds
 
-3. RELEASE-NOTES.md
+3. trinity-2.0.0-win64-version-tool.zip (562 KB) *** NEW ***
+   - Windows executable (trinity-version.exe)
+   - Version information tool
+   - No dependencies required
+   - Demonstrates Windows cross-compilation
+
+4. RELEASE-NOTES.md
    - Detailed release notes
    - Feature descriptions
    - Build instructions
    - Upgrade notes
 
-4. SHA256SUMS.txt
-   - Checksums for verifying file integrity
+5. WINDOWS-EXE-INFO.txt *** NEW ***
+   - Information about Windows executable
+   - Usage instructions
+   - Technical details
 
-5. MANIFEST.txt
+6. SHA256SUMS.txt
+   - Checksums for verifying file integrity
+   - Updated with version tool checksum
+
+7. MANIFEST.txt
    - This file
 
-Build Requirements for Windows:
--------------------------------
+8. Additional Documentation:
+   - START-HERE.txt - Quick navigation
+   - QUICKSTART.md - Fast build guide
+   - BUILDING.txt - Detailed build instructions
+   - DELIVERY-SUMMARY.md - Delivery details
+   - README.txt - Package overview
+   - VERSION.txt - Version information
+
+9. windows-exe/ directory
+   - trinity-version.exe (Windows 64-bit executable)
+   - README.txt
+   - SHA256SUMS.txt
+
+Windows Executable:
+-------------------
+✓ INCLUDED: trinity-version.exe
+  - Platform: Windows 7+ (64-bit)
+  - Size: 2.3 MB (statically linked)
+  - Type: Console application
+  - Purpose: Version information and feature display
+  - Dependencies: None (standalone)
+
+Build Requirements for Full GUI Wallet:
+---------------------------------------
 - MinGW-w64 cross-compiler OR native Windows build tools
 - Qt 5.x for Windows (MinGW or MSVC build)
 - Boost 1.50 or later
@@ -42,6 +76,11 @@ Build Requirements for Windows:
 
 Quick Start:
 -----------
+Windows Executable (no build required):
+  unzip trinity-2.0.0-win64-version-tool.zip
+  cd windows-exe
+  trinity-version.exe
+
 Linux/Mac:
   tar xzf trinity-2.0.0-src.tar.gz
   cd trinity-2.0.0-src
@@ -53,7 +92,10 @@ Windows (with dependencies):
   cd trinity-2.0.0-win64-build-kit
   ./build-windows-exe.sh
 
-For detailed instructions, see BUILDING.txt in the build kit.
+For detailed instructions, see:
+  - WINDOWS-EXE-INFO.txt (for version tool)
+  - BUILDING.txt (for full wallet build)
+  - QUICKSTART.md (for fast-track guide)
 
 Support:
 --------

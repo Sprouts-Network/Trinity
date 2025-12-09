@@ -1,0 +1,65 @@
+Trinity v2.0 Release Manifest
+=============================
+
+Release Date: December 2025
+Version: 2.0.0
+Git Tag: v2.0
+
+Files in this release:
+----------------------
+
+1. trinity-2.0.0-win64-build-kit.zip (3.1 MB)
+   - Complete source code
+   - Windows build script (build-windows-exe.sh)
+   - Build instructions (BUILDING.txt)
+   - README and version info
+   - Ready for Windows compilation with dependencies
+
+2. trinity-2.0.0-src.tar.gz (3.1 MB)
+   - Complete source code only
+   - For Linux/Mac builds or custom Windows builds
+
+3. RELEASE-NOTES.md
+   - Detailed release notes
+   - Feature descriptions
+   - Build instructions
+   - Upgrade notes
+
+4. SHA256SUMS.txt
+   - Checksums for verifying file integrity
+
+5. MANIFEST.txt
+   - This file
+
+Build Requirements for Windows:
+-------------------------------
+- MinGW-w64 cross-compiler OR native Windows build tools
+- Qt 5.x for Windows (MinGW or MSVC build)
+- Boost 1.50 or later
+- BerkeleyDB 4.8.30
+- OpenSSL 1.0.x or later
+- miniupnpc (optional, for UPnP support)
+
+Quick Start:
+-----------
+Linux/Mac:
+  tar xzf trinity-2.0.0-src.tar.gz
+  cd trinity-2.0.0-src
+  qmake trinity-qt.pro USE_UPNP=-
+  make
+
+Windows (with dependencies):
+  unzip trinity-2.0.0-win64-build-kit.zip
+  cd trinity-2.0.0-win64-build-kit
+  ./build-windows-exe.sh
+
+For detailed instructions, see BUILDING.txt in the build kit.
+
+Support:
+--------
+GitHub: https://github.com/Sprouts-Network/Trinity
+Issues: https://github.com/Sprouts-Network/Trinity/issues
+
+Verify checksums before building:
+----------------------------------
+sha256sum -c SHA256SUMS.txt

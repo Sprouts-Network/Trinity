@@ -1,0 +1,54 @@
+# Dockerfile for building Trinity Windows executable
+# This provides a reproducible build environment with all dependencies
+
+FROM ubuntu:20.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install basic build tools and MinGW cross-compiler
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libtool \
+    autotools-dev \
+    automake \
+    pkg-config \
+    bsdmainutils \
+    curl \
+    git \
+    g++-mingw-w64-x86-64 \
+    mingw-w64-x86-64-dev \
+    nsis \
+    zip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up cross-compilation environment
+ENV HOST=x86_64-w64-mingw32
+ENV PATH=/usr/$HOST/bin:$PATH
+
+# Create working directories
+WORKDIR /build
+RUN mkdir -p /deps /output
+
+# Add build scripts
+COPY build-windows.sh /build/
+
+# Note: In a complete setup, you would:
+# 1. Download and cross-compile Qt for Windows
+# 2. Download and cross-compile Boost for Windows
+# 3. Download and cross-compile BerkeleyDB for Windows
+# 4. Download and cross-compile OpenSSL for Windows
+# 5. Download and cross-compile miniupnpc for Windows
+#
+# This typically requires these commands (simplified):
+# RUN curl -L <qt-source> | tar xz && cd qt-* && ./configure -platform linux-g++ -xplatform win32-g++ && make
+# RUN curl -L <boost-source> | tar xz && cd boost-* && ./bootstrap.sh && ./b2 toolset=gcc-mingw
+# etc.
+
+# Set default command
+CMD ["/bin/bash"]
+
+# Usage:
+# docker build -t trinity-windows-builder .
+# docker run -v $(pwd):/trinity -it trinity-windows-builder
+# cd /trinity && qmake trinity-qt.pro && make

@@ -290,6 +290,8 @@ double GamifiedMiningDialog::getCurrentDifficulty()
     
     // Get difficulty for current algorithm
     int algo = algoCombo->currentIndex();
+    if (!pindexBest)
+        return 1.0;
     return GetDifficulty(GetLastBlockIndexForAlgo(pindexBest, algo), algo);
 }
 
@@ -474,13 +476,13 @@ void GamifiedMiningDialog::startMining()
     
     // Enable mining
     mapArgs["-gen"] = "1";
-    if (pwalletMain) {
-        GenerateBitcoins(true, pwalletMain);
-    } else {
+    if (!pwalletMain) {
         QMessageBox::critical(this, tr("Mining Error"), 
             tr("Wallet is not initialized. Cannot start mining."));
         return;
     }
+    
+    GenerateBitcoins(true, pwalletMain);
     
     isMining = true;
     miningStartTime = GetTime();

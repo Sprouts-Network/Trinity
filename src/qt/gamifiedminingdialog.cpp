@@ -12,6 +12,8 @@
 #include "main.h"
 #include "miner.h"
 #include "util.h"
+#include "init.h"
+#include "bitcoinrpc.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>

@@ -474,7 +474,13 @@ void GamifiedMiningDialog::startMining()
     
     // Enable mining
     mapArgs["-gen"] = "1";
-    GenerateBitcoins(true, pwalletMain);
+    if (pwalletMain) {
+        GenerateBitcoins(true, pwalletMain);
+    } else {
+        QMessageBox::critical(this, tr("Mining Error"), 
+            tr("Wallet is not initialized. Cannot start mining."));
+        return;
+    }
     
     isMining = true;
     miningStartTime = GetTime();
@@ -492,7 +498,9 @@ void GamifiedMiningDialog::stopMining()
 {
     // Disable mining
     mapArgs["-gen"] = "0";
-    GenerateBitcoins(false, pwalletMain);
+    if (pwalletMain) {
+        GenerateBitcoins(false, pwalletMain);
+    }
     
     isMining = false;
     

@@ -1,0 +1,151 @@
+name: Build Windows Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: Install MinGW cross-compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          g++-mingw-w64-x86-64 \
+          mingw-w64-x86-64-dev \
+          gcc-mingw-w64-x86-64 \
+          nsis \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          curl \
+          unzip
+    
+    - name: Setup build environment
+      run: |
+        echo "Setting up cross-compilation environment for Windows..."
+        export HOST=x86_64-w64-mingw32
+        mkdir -p build-win/deps
+        mkdir -p build-win/output
+    
+    - name: Download dependencies (placeholder)
+      run: |
+        echo "In a production build, download pre-built Windows dependencies:"
+        echo "- Qt 5.x for Windows (MinGW 64-bit)"
+        echo "- Boost 1.50+ for Windows"
+        echo "- BerkeleyDB 4.8 for Windows"
+        echo "- OpenSSL 1.0.x for Windows"
+        echo "- miniupnpc for Windows"
+        echo ""
+        echo "For demonstration purposes, this step shows where dependencies would be fetched."
+    
+    - name: Build information
+      run: |
+        echo "Trinity v2.0 Windows Build"
+        echo "=========================="
+        cat src/clientversion.h | grep "CLIENT_VERSION"
+    
+    - name: Create build notes
+      run: |
+        mkdir -p dist
+        cat > dist/BUILD_NOTES.txt << 'EOF'
+        Trinity v2.0 Windows Build Instructions
+        ========================================
+        
+        To build Trinity for Windows, you need:
+        
+        1. Dependencies (cross-compiled for Windows):
+           - Qt 5.x (with mingw-w64)
+           - Boost 1.50+
+           - BerkeleyDB 4.8.30
+           - OpenSSL 1.0.x
+           - miniupnpc 1.6+
+        
+        2. Build steps:
+           a) Install MinGW-w64 cross-compiler
+           b) Set up dependencies in proper paths
+           c) Run qmake with cross-compilation flags:
+              
+              x86_64-w64-mingw32-qmake-qt5 \
+                BOOST_LIB_SUFFIX=-mgw-mt-s-1_50 \
+                BOOST_INCLUDE_PATH=/path/to/boost \
+                BOOST_LIB_PATH=/path/to/boost/stage/lib \
+                BDB_INCLUDE_PATH=/path/to/db/include \
+                BDB_LIB_PATH=/path/to/db/lib \
+                OPENSSL_INCLUDE_PATH=/path/to/openssl/include \
+                OPENSSL_LIB_PATH=/path/to/openssl/lib \
+                MINIUPNPC_INCLUDE_PATH=/path/to/miniupnpc \
+                MINIUPNPC_LIB_PATH=/path/to/miniupnpc \
+                trinity-qt.pro
+           
+           d) Run make
+           e) Strip and package the executable
+        
+        3. For automated builds, use the Gitian build system or Docker containers
+           with pre-built dependencies.
+        
+        Note: This release includes merged features from upgrade5 branch:
+        - Modern wallet creation dialog with BIP39 seed phrases
+        - Dark/Light theme support
+        - Modernized UI settings
+        
+        Version: 2.0
+        Build Date: $(date)
+        EOF
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: trinity-windows-build-notes
+        path: dist/BUILD_NOTES.txt
+    
+    - name: Create Release (if tagged)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/BUILD_NOTES.txt
+        body: |
+          Trinity v2.0 Release
+          
+          This release merges the upgrade5 branch with the following features:
+          - Modern onboarding flow with required BIP39 seed phrase confirmation
+          - Dynamic dark/light theme support
+          - Modern settings menu for UI modernization
+          
+          ## Changes
+          - Updated to version 2.0.0
+          - Merged upgrade5 branch improvements
+          - Updated copyright year to 2025
+          - Added theme support (dark/light modes)
+          - Enhanced wallet creation with BIP39 seed phrases
+          
+          ## Building for Windows
+          See BUILD_NOTES.txt for detailed Windows build instructions.
+          A complete Windows build requires cross-compiled dependencies.
+          
+          ## Building from Source
+          Requirements:
+          - Qt 5.x
+          - Boost 1.50+
+          - BerkeleyDB 4.8
+          - OpenSSL 1.0.x
+          - miniupnpc (optional, for UPnP support)
+          
+          Build:
+          ```
+          qmake trinity-qt.pro
+          make
+          ```
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

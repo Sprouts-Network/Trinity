@@ -1,0 +1,263 @@
+name: Build Windows Executable with MXE
+
+# This workflow builds an actual Windows executable using MXE
+# It takes longer to run but produces a real .exe file
+
+on:
+  workflow_dispatch:
+    inputs:
+      use_cache:
+        description: 'Use cached MXE build'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  build-with-mxe:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    
+    steps:
+    - name: Maximize build space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        df -h
+    
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: Cache MXE build
+      if: ${{ github.event.inputs.use_cache == 'true' }}
+      id: cache-mxe
+      uses: actions/cache@v3
+      with:
+        path: /opt/mxe
+        key: mxe-x86-64-static-qt5-minimal-v2
+        restore-keys: |
+          mxe-x86-64-static-qt5-minimal-
+          mxe-x86-64-static-
+    
+    - name: Install MXE build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          autoconf \
+          automake \
+          autopoint \
+          bash \
+          bison \
+          bzip2 \
+          flex \
+          g++ \
+          g++-multilib \
+          gettext \
+          git \
+          gperf \
+          intltool \
+          libc6-dev-i386 \
+          libgdk-pixbuf2.0-dev \
+          libltdl-dev \
+          libssl-dev \
+          libtool-bin \
+          libxml-parser-perl \
+          lzip \
+          make \
+          openssl \
+          p7zip-full \
+          patch \
+          perl \
+          python3 \
+          python3-mako \
+          python3-pkg-resources \
+          ruby \
+          sed \
+          unzip \
+          wget \
+          xz-utils
+    
+    - name: Set up MXE
+      if: steps.cache-mxe.outputs.cache-hit != 'true'
+      run: |
+        echo "Setting up MXE for cross-compilation..."
+        echo "This will take 2-3 hours on first run but will be cached"
+        
+        sudo mkdir -p /opt/mxe
+        sudo chown $(whoami) /opt/mxe
+        cd /opt
+        git clone --depth 1 https://github.com/mxe/mxe.git
+        cd mxe
+        
+        # Build Qt and dependencies for Windows
+        make MXE_TARGETS='x86_64-w64-mingw32.static' \
+          MXE_PLUGIN_DIRS='plugins/gcc12' \
+          qtbase \
+          qttools \
+          boost \
+          db \
+          openssl \
+          miniupnpc \
+          -j$(nproc)
+    
+    - name: Verify MXE installation
+      run: |
+        export PATH=/opt/mxe/usr/bin:$PATH
+        ls -la /opt/mxe/usr/bin/ | grep qmake || true
+        ls -la /opt/mxe/usr/x86_64-w64-mingw32.static/bin/ || true
+    
+    - name: Build Trinity for Windows
+      run: |
+        export PATH=/opt/mxe/usr/bin:$PATH
+        export MXE_TARGET=x86_64-w64-mingw32.static
+        
+        echo "Building Trinity v2.0 for Windows..."
+        echo "Using MXE cross-compilation toolchain"
+        echo ""
+        
+        # Find the qmake binary
+        QMAKE_BIN=$(find /opt/mxe/usr -name "*qmake-qt5" -type f | head -1)
+        if [ -z "$QMAKE_BIN" ]; then
+          echo "ERROR: qmake not found!"
+          find /opt/mxe/usr -name "*qmake*" -type f
+          exit 1
+        fi
+        
+        echo "Using qmake: $QMAKE_BIN"
+        $QMAKE_BIN --version
+        
+        # Configure the build
+        $QMAKE_BIN \
+          USE_UPNP=1 \
+          USE_QRCODE=0 \
+          RELEASE=1 \
+          trinity-qt.pro
+        
+        echo ""
+        echo "Compiling Trinity..."
+        make -j$(nproc)
+        
+        echo ""
+        echo "Build complete!"
+        ls -lh release/trinity-qt.exe
+        file release/trinity-qt.exe
+        
+        # Strip the executable
+        STRIP_BIN=$(find /opt/mxe/usr -name "*strip" -type f | grep mingw | head -1)
+        $STRIP_BIN release/trinity-qt.exe
+        
+        echo ""
+        echo "After stripping:"
+        ls -lh release/trinity-qt.exe
+        
+    - name: Prepare distribution package
+      run: |
+        mkdir -p dist
+        cp release/trinity-qt.exe dist/
+        
+        cat > dist/README.txt << 'EOF'
+        Trinity v2.0 for Windows
+        ========================
+        
+        This is Trinity cryptocurrency wallet version 2.0.
+        
+        NEW FEATURES:
+        - Modern wallet creation with BIP39 seed phrase support
+        - Dark/Light theme support
+        - Enhanced security and modernized UI
+        
+        SYSTEM REQUIREMENTS:
+        - Windows 7 or later
+        - 64-bit Windows
+        - 2GB RAM
+        - 500MB disk space
+        
+        GETTING STARTED:
+        1. Run trinity-qt.exe
+        2. Create a new wallet
+        3. Securely save your seed phrase
+        4. Start using Trinity!
+        
+        SUPPORT:
+        - GitHub: https://github.com/Sprouts-Network/Trinity
+        - Issues: https://github.com/Sprouts-Network/Trinity/issues
+        
+        LICENSE:
+        Trinity is released under the MIT License.
+        EOF
+        
+        cat > dist/BUILD_INFO.txt << EOF
+        Trinity v2.0 Windows Build
+        ==========================
+        
+        Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        Build System: GitHub Actions
+        Build Method: MXE Cross-Compilation
+        Target: Windows x86_64 (static build)
+        
+        Compiler: MinGW-w64 via MXE
+        Qt Version: 5.x (static)
+        
+        This is a fully static build - no DLL dependencies required.
+        
+        File: trinity-qt.exe
+        Size: $(ls -lh dist/trinity-qt.exe | awk '{print $5}')
+        Type: $(file dist/trinity-qt.exe)
+        
+        Features:
+        - BIP39 seed phrase support
+        - Dark/Light themes
+        - Modern UI
+        - Static linking (standalone executable)
+        
+        For source code:
+        https://github.com/Sprouts-Network/Trinity
+        EOF
+    
+    - name: Create ZIP package
+      run: |
+        cd dist
+        zip -9 trinity-v2.0-windows-x64.zip trinity-qt.exe README.txt BUILD_INFO.txt
+        ls -lh trinity-v2.0-windows-x64.zip
+    
+    - name: Upload Windows executable
+      uses: actions/upload-artifact@v3
+      with:
+        name: trinity-windows-x64-executable
+        path: |
+          dist/trinity-qt.exe
+          dist/README.txt
+          dist/BUILD_INFO.txt
+    
+    - name: Upload ZIP package
+      uses: actions/upload-artifact@v3
+      with:
+        name: trinity-windows-x64-package
+        path: dist/trinity-v2.0-windows-x64.zip
+    
+    - name: Build Summary
+      run: |
+        echo "================================================"
+        echo "Trinity v2.0 Windows Build Complete!"
+        echo "================================================"
+        echo ""
+        echo "✓ Successfully compiled Windows executable"
+        echo "✓ Created distribution package"
+        echo "✓ Uploaded artifacts for download"
+        echo ""
+        echo "Executable Details:"
+        echo "-------------------"
+        ls -lh dist/trinity-qt.exe
+        file dist/trinity-qt.exe
+        echo ""
+        echo "Package Details:"
+        echo "----------------"
+        ls -lh dist/*.zip
+        echo ""
+        echo "To download:"
+        echo "1. Go to Actions tab"
+        echo "2. Click on this workflow run"
+        echo "3. Download artifacts from the bottom of the page"
+        echo ""

@@ -229,6 +229,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/limitedmap.h \
     src/qt/splashscreen.h \
     src/qt/intro.h \
+    src/qt/gamifiedminingdialog.h \
+    src/fees.h \
+    src/coincontrol.h \
     src/qt/createwalletdialog.h \
     src/scrypt.h \
     src/sph_blake.h \
@@ -314,6 +317,8 @@ SOURCES += src/qt/bitcoin.cpp \
     src/txdb.cpp \
     src/qt/splashscreen.cpp \
     src/qt/intro.cpp \
+    src/qt/gamifiedminingdialog.cpp \
+    src/fees.cpp \
     src/qt/createwalletdialog.cpp \
     src/scrypt.cpp \
     src/blake.c \

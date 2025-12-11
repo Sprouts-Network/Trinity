@@ -300,13 +300,13 @@ jobs:
         ls -lh trinity-windows-build-docs.zip
         
     - name: Upload build documentation
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: trinity-windows-build-documentation
         path: dist/trinity-windows-build-docs.zip
     
     - name: Upload individual files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: trinity-windows-build-guides
         path: |

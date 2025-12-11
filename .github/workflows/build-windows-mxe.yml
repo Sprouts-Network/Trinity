@@ -226,7 +226,7 @@ jobs:
         ls -lh trinity-v2.0-windows-x64.zip
     
     - name: Upload Windows executable
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: trinity-windows-x64-executable
         path: |
@@ -235,7 +235,7 @@ jobs:
           dist/BUILD_INFO.txt
     
     - name: Upload ZIP package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: trinity-windows-x64-package
         path: dist/trinity-v2.0-windows-x64.zip

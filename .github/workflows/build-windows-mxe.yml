@@ -121,10 +121,14 @@ jobs:
         echo ""
         
         # Find the qmake binary
-        QMAKE_BIN=$(find /opt/mxe/usr -name "*qmake-qt5" -type f | head -1)
+        QMAKE_BIN=$(find /opt/mxe/usr -path "*/qt5/bin/qmake" -type f | head -1)
+        if [ -z "$QMAKE_BIN" ]; then
+          QMAKE_BIN=$(find /opt/mxe/usr -name "qmake*" -type f | head -1)
+        fi
+
         if [ -z "$QMAKE_BIN" ]; then
           echo "ERROR: qmake not found!"
-          find /opt/mxe/usr -name "*qmake*" -type f
+          find /opt/mxe/usr -name "*qmake*" -type f || true
           exit 1
         fi
         
@@ -154,7 +158,7 @@ jobs:
         echo ""
         echo "After stripping:"
         ls -lh release/trinity-qt.exe
-        
+    
     - name: Prepare distribution package
       run: |
         mkdir -p dist

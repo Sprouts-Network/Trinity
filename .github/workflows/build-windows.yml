@@ -11,6 +11,9 @@ jobs:
   # For actual production builds, use a dedicated build server with pre-compiled dependencies
   build-windows-demonstration:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write  # Needed for creating releases
+      actions: read    # Needed for reading workflow artifacts
     
     steps:
     - name: Checkout code

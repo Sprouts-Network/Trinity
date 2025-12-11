@@ -16,6 +16,9 @@ jobs:
   build-with-mxe:
     runs-on: ubuntu-22.04
     timeout-minutes: 360
+    permissions:
+      contents: write  # Needed for creating releases
+      actions: read    # Needed for reading workflow artifacts
     
     steps:
     - name: Maximize build space

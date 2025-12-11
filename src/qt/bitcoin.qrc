@@ -46,6 +46,10 @@
         <file alias="splash">res/images/splash.png</file>
         <file alias="splash_testnet">res/images/splash_testnet.png</file>
     </qresource>
+    <qresource prefix="/themes">
+        <file alias="dark">res/themes/dark.qss</file>
+        <file alias="light">res/themes/light.qss</file>
+    </qresource>
     <qresource prefix="/movies">
         <file alias="update_spinner">res/movies/update_spinner.mng</file>
     </qresource>

@@ -1,0 +1,11 @@
+Trinity Cryptocurrency Wallet
+Version: 2.0.0
+Release Date: December 2025
+Build: Windows x64
+
+Git Commit: $(git -C /home/runner/work/Trinity/Trinity rev-parse HEAD)
+Git Tag: v2.0
+
+Merged Features:
+- upgrade5 branch (Modern UI, BIP39 support, Themes)
+- Build infrastructure updates

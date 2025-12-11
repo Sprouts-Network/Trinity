@@ -1,0 +1,21 @@
+/* Example Dark Theme */
+QWidget {
+    background-color: #232629;
+    color: #d8dee9;
+}
+QPushButton {
+    background-color: #2d2f31;
+    color: #eceff4;
+    border: 1px solid #3b4252;
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+QMenuBar, QMenu {
+    background: #2d2f31;
+    color: #eceff4;
+    border: none;
+}
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background: #282a36;
+    color: #d8dee9;
+}

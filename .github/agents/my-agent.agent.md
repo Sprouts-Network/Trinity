@@ -1,5 +1,10 @@
+# Fill in the fields below to create a basic custom agent for your repository.
+# The Copilot CLI can be used for local testing: https://gh.io/customagents/cli
+# To make this agent available, merge this file into the default repository branch.
+# For format details, see: https://gh.io/customagents/config
+
 name: Windows Qt Compilation Analyzer
-description: Analyzes recent Windows Qt compilation workflows to identify recurring issues and failure patterns
+description: Monitors and analyzes Windows Qt compilation workflows to identify recurring failure patterns and issues from recent merged/failed workflows
 ---
 
 # Windows Qt Compilation Analyzer
@@ -43,15 +48,3 @@ The agent periodically scans GitHub Actions workflow runs, focusing on:
 - Historical analysis of Windows Qt compilation stability
 
 This agent helps maintain Windows Qt compilation reliability by proactively identifying and documenting common failure modes and their solutions.
-# Fill in the fields below to create a basic custom agent for your repository.
-# The Copilot CLI can be used for local testing: https://gh.io/customagents/cli
-# To make this agent available, merge this file into the default repository branch.
-# For format details, see: https://gh.io/customagents/config
-
-name:
-description:
----
-
-# My Agent
-
-solve all previous workflow issues with recent merges in mind 

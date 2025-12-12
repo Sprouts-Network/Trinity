@@ -5,8 +5,9 @@
 #include <QSystemTrayIcon>
 #include <QMap>
 
+#include "walletframe.h" // <-- added to provide full WalletFrame definition
+
 class TransactionTableModel;
-class WalletFrame;
 class WalletView;
 class ClientModel;
 class WalletModel;

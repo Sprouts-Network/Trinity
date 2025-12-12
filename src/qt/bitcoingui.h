@@ -5,8 +5,11 @@
 #include <QSystemTrayIcon>
 #include <QMap>
 
+// Add includes for full type visibility to avoid incomplete type errors in bitcoingui.cpp
+#include "walletframe.h"
+#include "optionsmodel.h"
+
 class TransactionTableModel;
-class WalletFrame;
 class WalletView;
 class ClientModel;
 class WalletModel;

@@ -48,6 +48,7 @@ public:
         functionality.
     */
     void setWalletModel(WalletModel *walletModel);
+    WalletModel *getWalletModel();
 
     bool handleURI(const QString &uri);
 

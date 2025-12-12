@@ -8,8 +8,17 @@
 #include "core.h"
 #include "fees.h"
 
+#include <boost/assign/list_of.hpp>
+
 using namespace json_spirit;
 using namespace std;
+using namespace boost::assign;
+
+// Helper function for RPC help examples
+static string HelpExampleCli(string methodname, string args)
+{
+    return "> trinity-cli " + methodname + " " + args + "\n";
+}
 
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out);
 
@@ -115,7 +124,7 @@ Value estimatefee(const Array& params, bool fHelp)
     int64 nFeeRate = feeEstimator.EstimateFee(nBlocks);
     
     Object result;
-    result.push_back(Pair("feerate", nFeeRate));
+    result.push_back(Pair("feerate", (boost::int64_t)nFeeRate));
     result.push_back(Pair("blocks", nBlocks));
     result.push_back(Pair("timeminutes", nBlocks * 2.5)); // Assuming 2.5 min blocks
     

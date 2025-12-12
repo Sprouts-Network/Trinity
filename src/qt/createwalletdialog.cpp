@@ -40,13 +40,13 @@ CreateWalletDialog::~CreateWalletDialog()
 void CreateWalletDialog::generateSeed()
 {
     seedWords = generateRandomSeedWords();
-    ui->seedDisplay->setText(seedWords.join(" "));
+    ui->seedDisplay->setPlainText(seedWords.join(" "));
 }
 
 void CreateWalletDialog::on_copySeedButton_clicked()
 {
     QClipboard *clipboard = QApplication::clipboard();
-    clipboard->setText(ui->seedDisplay->text());
+    clipboard->setText(ui->seedDisplay->toPlainText());
     QMessageBox::information(this, tr("Copied!"), tr("Seed phrase copied to clipboard."));
 }
 

@@ -5,8 +5,11 @@
 #include <QSystemTrayIcon>
 #include <QMap>
 
+// Include headers for complete type definitions to avoid incomplete type errors when using these classes
+#include "walletframe.h"
+#include "optionsmodel.h"
+
 class TransactionTableModel;
-class WalletFrame;
 class WalletView;
 class ClientModel;
 class WalletModel;

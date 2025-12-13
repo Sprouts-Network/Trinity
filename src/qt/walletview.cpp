@@ -134,6 +134,11 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     }
 }
 
+WalletModel *WalletView::getWalletModel()
+{
+    return walletModel;
+}
+
 void WalletView::incomingTransaction(const QModelIndex& parent, int start, int /*end*/)
 {
     // Prevent balloon-spam when initial block download is in progress

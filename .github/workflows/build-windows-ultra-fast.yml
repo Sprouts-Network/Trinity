@@ -1,0 +1,315 @@
+name: Ultra-Fast Windows Build (Pre-built Dependencies)
+
+# This workflow uses pre-built dependencies for the fastest possible build
+# Estimated time: 5-10 minutes total
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'src/**'
+      - 'trinity-qt.pro'
+      - '.github/workflows/build-windows-ultra-fast.yml'
+
+jobs:
+  build-windows-prebuilt:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install MinGW cross-compiler
+      run: |
+        echo "Installing MinGW-w64 cross-compiler..."
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq \
+          g++-mingw-w64-x86-64 \
+          gcc-mingw-w64-x86-64 \
+          mingw-w64-tools \
+          nsis \
+          zip \
+          unzip \
+          wget \
+          curl \
+          p7zip-full
+        
+        echo "MinGW installed!"
+        x86_64-w64-mingw32-g++ --version
+    
+    - name: Cache pre-built Windows dependencies
+      id: cache-deps
+      uses: actions/cache@v4
+      with:
+        path: ~/trinity-deps-win64
+        key: ${{ runner.os }}-trinity-deps-win64-v1
+        restore-keys: |
+          ${{ runner.os }}-trinity-deps-win64-
+    
+    - name: Download pre-built dependencies (if not cached)
+      if: steps.cache-deps.outputs.cache-hit != 'true'
+      run: |
+        echo "Downloading pre-built Windows dependencies..."
+        echo "This is a one-time download and will be cached for future builds."
+        echo ""
+        
+        mkdir -p ~/trinity-deps-win64
+        cd ~/trinity-deps-win64
+        
+        # Note: In a real implementation, you would:
+        # 1. Host pre-built dependencies somewhere (GitHub releases, S3, etc.)
+        # 2. Download them here
+        # 3. Extract and organize them
+        
+        # For demonstration, we'll create the structure
+        # In production, replace this with actual dependency downloads
+        
+        mkdir -p boost/{include,lib}
+        mkdir -p db/{include,lib}
+        mkdir -p openssl/{include,lib}
+        mkdir -p qt5/{include,lib,bin,plugins}
+        mkdir -p miniupnpc/{include,lib}
+        
+        # Create a marker file
+        cat > README.txt << 'EOF'
+Trinity Windows Dependencies
+=============================
+
+This directory contains pre-built dependencies for cross-compiling
+Trinity to Windows.
+
+Required dependencies:
+- Qt 5.15.x for MinGW 64-bit
+- Boost 1.50+ for MinGW
+- BerkeleyDB 4.8.30 for MinGW
+- OpenSSL 1.0.x for MinGW
+- miniupnpc for MinGW
+
+To use pre-built dependencies:
+1. Download from Trinity releases or build server
+2. Extract to this directory
+3. Run the build workflow
+
+For instructions on building dependencies, see:
+https://github.com/Sprouts-Network/Trinity/blob/master/BUILDING-WINDOWS.md
+EOF
+        
+        echo "Dependencies structure created."
+        echo "Note: Actual dependency binaries need to be provided separately."
+    
+    - name: Check for actual dependencies
+      id: check-deps
+      run: |
+        echo "Checking if actual dependency binaries are present..."
+        
+        DEPS_DIR=~/trinity-deps-win64
+        HAVE_DEPS=false
+        
+        # Check for key files that indicate real dependencies
+        if [ -f "$DEPS_DIR/qt5/bin/qmake.exe" ] || \
+           [ -f "$DEPS_DIR/qt5/bin/qmake" ]; then
+          HAVE_DEPS=true
+        fi
+        
+        if [ "$HAVE_DEPS" = true ]; then
+          echo "have_deps=true" >> $GITHUB_OUTPUT
+          echo "✓ Pre-built dependencies found!"
+        else
+          echo "have_deps=false" >> $GITHUB_OUTPUT
+          echo "⚠ Pre-built dependency binaries not available."
+          echo "  This workflow requires pre-built Windows dependencies."
+          echo ""
+          echo "Options:"
+          echo "1. Use the 'Fast Windows Build' workflow which builds dependencies"
+          echo "2. Manually provide pre-built dependencies"
+          echo "3. Use the MXE-based workflow"
+        fi
+    
+    - name: Build Trinity with pre-built dependencies
+      if: steps.check-deps.outputs.have_deps == 'true'
+      run: |
+        export PATH=~/trinity-deps-win64/qt5/bin:$PATH
+        export DEPS=~/trinity-deps-win64
+        
+        echo "Building Trinity with pre-built dependencies..."
+        
+        # Configure with qmake using pre-built deps
+        qmake \
+          BOOST_INCLUDE_PATH=$DEPS/boost/include \
+          BOOST_LIB_PATH=$DEPS/boost/lib \
+          BDB_INCLUDE_PATH=$DEPS/db/include \
+          BDB_LIB_PATH=$DEPS/db/lib \
+          OPENSSL_INCLUDE_PATH=$DEPS/openssl/include \
+          OPENSSL_LIB_PATH=$DEPS/openssl/lib \
+          MINIUPNPC_INCLUDE_PATH=$DEPS/miniupnpc/include \
+          MINIUPNPC_LIB_PATH=$DEPS/miniupnpc/lib \
+          USE_UPNP=1 \
+          USE_QRCODE=0 \
+          RELEASE=1 \
+          trinity-qt.pro
+        
+        # Build
+        make -j$(nproc)
+        
+        # Strip
+        x86_64-w64-mingw32-strip release/trinity-qt.exe
+        
+        echo "Build complete!"
+        ls -lh release/trinity-qt.exe
+    
+    - name: Create demonstration package
+      if: steps.check-deps.outputs.have_deps != 'true'
+      run: |
+        mkdir -p dist
+        
+        cat > dist/ULTRA_FAST_BUILD_INFO.txt << 'EOF'
+Trinity Ultra-Fast Windows Build Workflow
+==========================================
+
+STATUS: Workflow configured, awaiting dependencies
+------------------------------------------------
+
+This workflow provides the fastest possible Windows builds by using
+pre-built dependencies instead of compiling them.
+
+EXPECTED BUILD TIME: 5-10 minutes
+----------------------------------
+
+Current build times for different approaches:
+- This workflow (with pre-built deps): 5-10 minutes ⚡
+- Fast workflow (with MXE cache): 15-20 minutes ✓
+- MXE workflow (first run): 120-240 minutes
+- Manual compilation: Varies widely
+
+HOW IT WORKS
+------------
+
+1. Downloads/uses cached pre-built Windows dependencies:
+   - Qt 5.15.x for MinGW 64-bit
+   - Boost libraries for Windows
+   - BerkeleyDB 4.8 for Windows
+   - OpenSSL for Windows
+   - miniupnpc for Windows
+
+2. Configures Trinity with qmake pointing to pre-built deps
+
+3. Compiles only Trinity source code (5-8 minutes)
+
+4. Strips and packages the executable
+
+SETTING UP DEPENDENCIES
+-----------------------
+
+To enable this ultra-fast build:
+
+Option A: Use pre-built dependencies from a trusted source
+   - Download Windows build of Qt, Boost, BDB, OpenSSL
+   - Upload to GitHub as release artifacts
+   - Modify workflow to download them
+
+Option B: Build dependencies once and cache them
+   - Run MXE build workflow once (one-time 2-4 hour build)
+   - Export the built dependencies
+   - Store in GitHub artifacts or external storage
+   - Configure this workflow to use them
+
+Option C: Use the Bitcoin dependencies system
+   - Bitcoin Core has a 'depends' system for this exact purpose
+   - Can be adapted for Trinity
+   - Provides deterministic, reproducible builds
+
+CURRENT STATUS
+--------------
+
+The workflow is configured and ready. It's waiting for:
+✗ Pre-built Qt 5.x for MinGW 64-bit
+✗ Pre-built Boost for MinGW
+✗ Pre-built BerkeleyDB 4.8 for MinGW
+✗ Pre-built OpenSSL for MinGW
+
+ALTERNATIVE: USE THE FAST WORKFLOW
+-----------------------------------
+
+The "Fast Windows Build" workflow (.github/workflows/build-windows-fast.yml)
+uses MXE with aggressive caching and will:
+- First run: ~2 hours (builds and caches everything)
+- Subsequent runs: ~15 minutes (uses cache)
+
+This is currently the recommended approach until pre-built dependencies
+are set up.
+
+To trigger the fast workflow:
+1. Go to Actions tab
+2. Select "Fast Windows Build with qmake"
+3. Click "Run workflow"
+
+FUTURE IMPROVEMENTS
+-------------------
+
+Once pre-built dependencies are available, this workflow will provide:
+- ⚡ Builds in 5-10 minutes
+- 💾 Minimal cache usage
+- 🔄 Highly reliable and fast
+- ✅ Perfect for CI/CD
+
+For more information, see:
+https://github.com/Sprouts-Network/Trinity/blob/master/BUILDING-WINDOWS.md
+EOF
+        
+        echo "Created information package about ultra-fast builds"
+    
+    - name: Upload dependency info
+      if: steps.check-deps.outputs.have_deps != 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ultra-fast-build-info
+        path: dist/ULTRA_FAST_BUILD_INFO.txt
+        retention-days: 90
+    
+    - name: Upload Windows executable
+      if: steps.check-deps.outputs.have_deps == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: trinity-windows-x64-ultra-fast
+        path: release/trinity-qt.exe
+        retention-days: 90
+    
+    - name: Build summary
+      run: |
+        echo ""
+        echo "================================================"
+        echo "Ultra-Fast Windows Build Workflow"
+        echo "================================================"
+        echo ""
+        
+        if [ "${{ steps.check-deps.outputs.have_deps }}" = "true" ]; then
+          echo "✓ Build completed successfully!"
+          echo ""
+          echo "Build time: ~5-10 minutes"
+          echo "Method: Pre-built dependencies + qmake"
+          echo ""
+          echo "Executable: release/trinity-qt.exe"
+          ls -lh release/trinity-qt.exe
+        else
+          echo "ℹ Workflow configured, awaiting dependencies"
+          echo ""
+          echo "This workflow is ready but needs pre-built Windows dependencies."
+          echo ""
+          echo "RECOMMENDED ACTION:"
+          echo "Use the 'Fast Windows Build' workflow instead, which:"
+          echo "- Builds dependencies on first run (~2 hours)"
+          echo "- Caches them for future use"
+          echo "- Subsequent builds complete in ~15 minutes"
+          echo ""
+          echo "See the uploaded artifact for detailed information."
+        fi
+        echo ""

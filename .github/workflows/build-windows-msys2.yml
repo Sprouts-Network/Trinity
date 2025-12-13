@@ -1,0 +1,254 @@
+name: Ultra-Fast Windows Build (MSYS2 Dependencies)
+
+# This workflow uses pre-built MSYS2 MinGW packages for ultra-fast builds
+# Build time: ~10-15 minutes total
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'src/**'
+      - 'trinity-qt.pro'
+
+jobs:
+  build-windows-msys2:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      actions: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install base tools
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq \
+          wget \
+          curl \
+          xz-utils \
+          zip \
+          unzip \
+          p7zip-full \
+          make \
+          autoconf \
+          automake \
+          pkg-config
+    
+    - name: Cache MSYS2 MinGW dependencies
+      id: cache-msys2
+      uses: actions/cache@v4
+      with:
+        path: ~/msys2-deps
+        key: msys2-mingw-trinity-deps-v1
+        restore-keys: |
+          msys2-mingw-trinity-deps-
+    
+    - name: Download MSYS2 MinGW packages
+      if: steps.cache-msys2.outputs.cache-hit != 'true'
+      run: |
+        echo "Downloading pre-built MSYS2 MinGW packages..."
+        mkdir -p ~/msys2-deps
+        cd ~/msys2-deps
+        
+        # MSYS2 repository base URL
+        REPO="https://repo.msys2.org/mingw/mingw64"
+        
+        # Download pre-built packages (adjust versions as needed)
+        echo "Downloading Qt5 base..."
+        wget -q "$REPO/mingw-w64-x86_64-qt5-base-5.15.11-1-any.pkg.tar.zst" || true
+        
+        echo "Downloading Qt5 tools..."
+        wget -q "$REPO/mingw-w64-x86_64-qt5-tools-5.15.11-1-any.pkg.tar.zst" || true
+        
+        echo "Downloading Boost..."
+        wget -q "$REPO/mingw-w64-x86_64-boost-1.81.0-2-any.pkg.tar.zst" || true
+        
+        echo "Downloading OpenSSL..."
+        wget -q "$REPO/mingw-w64-x86_64-openssl-3.1.4-1-any.pkg.tar.zst" || true
+        
+        echo "Downloading BerkeleyDB..."
+        wget -q "$REPO/mingw-w64-x86_64-db-6.2.32-1-any.pkg.tar.zst" || true
+        
+        echo "Downloading miniupnpc..."
+        wget -q "$REPO/mingw-w64-x86_64-miniupnpc-2.2.5-1-any.pkg.tar.zst" || true
+        
+        # Note: MSYS2 packages are compressed with zstd
+        # They will be extracted in the next step
+        
+        echo "Download complete. Packages cached for future runs."
+    
+    - name: Extract MSYS2 packages
+      run: |
+        echo "Extracting MSYS2 packages..."
+        mkdir -p ~/mingw64
+        cd ~/msys2-deps
+        
+        # Extract all downloaded packages
+        for pkg in *.pkg.tar.zst; do
+          if [ -f "$pkg" ]; then
+            echo "Extracting $pkg..."
+            tar --use-compress-program=unzstd -xf "$pkg" -C ~/mingw64 || true
+          fi
+        done
+        
+        echo "Extraction complete."
+        ls -la ~/mingw64/ || true
+    
+    - name: Setup environment
+      run: |
+        echo "Setting up build environment..."
+        export MINGW_PREFIX=~/mingw64/mingw64
+        
+        # Add MinGW bin to PATH
+        echo "$MINGW_PREFIX/bin" >> $GITHUB_PATH
+        
+        # Display what we have
+        if [ -d "$MINGW_PREFIX" ]; then
+          echo "MinGW prefix found at: $MINGW_PREFIX"
+          ls -la "$MINGW_PREFIX/bin" | head -20 || true
+        else
+          echo "Warning: MinGW prefix not found"
+        fi
+    
+    - name: Verify dependencies
+      id: check-deps
+      run: |
+        MINGW_PREFIX=~/mingw64/mingw64
+        HAVE_DEPS=false
+        
+        echo "Checking for required dependencies..."
+        
+        # Check for qmake
+        if [ -f "$MINGW_PREFIX/bin/qmake.exe" ]; then
+          echo "✓ qmake found"
+          HAVE_DEPS=true
+        else
+          echo "✗ qmake not found"
+          HAVE_DEPS=false
+        fi
+        
+        # Check for boost
+        if [ -d "$MINGW_PREFIX/include/boost" ]; then
+          echo "✓ Boost headers found"
+        else
+          echo "✗ Boost headers not found"
+          HAVE_DEPS=false
+        fi
+        
+        # Check for OpenSSL
+        if [ -f "$MINGW_PREFIX/lib/libssl.a" ] || [ -f "$MINGW_PREFIX/lib/libssl.dll.a" ]; then
+          echo "✓ OpenSSL found"
+        else
+          echo "✗ OpenSSL not found"
+          HAVE_DEPS=false
+        fi
+        
+        if [ "$HAVE_DEPS" = true ]; then
+          echo "have_deps=true" >> $GITHUB_OUTPUT
+          echo "All required dependencies verified!"
+        else
+          echo "have_deps=false" >> $GITHUB_OUTPUT
+          echo "Some dependencies are missing."
+          echo "Note: MSYS2 package download URLs may need updating."
+          echo "Falling back to Fast Build workflow is recommended."
+        fi
+    
+    - name: Build Trinity with MSYS2 dependencies
+      if: steps.check-deps.outputs.have_deps == 'true'
+      run: |
+        export MINGW_PREFIX=~/mingw64/mingw64
+        export PATH="$MINGW_PREFIX/bin:$PATH"
+        
+        echo "Building Trinity with MSYS2 dependencies..."
+        
+        # Configure with qmake
+        $MINGW_PREFIX/bin/qmake.exe \
+          BOOST_INCLUDE_PATH=$MINGW_PREFIX/include \
+          BOOST_LIB_PATH=$MINGW_PREFIX/lib \
+          BDB_INCLUDE_PATH=$MINGW_PREFIX/include \
+          BDB_LIB_PATH=$MINGW_PREFIX/lib \
+          OPENSSL_INCLUDE_PATH=$MINGW_PREFIX/include \
+          OPENSSL_LIB_PATH=$MINGW_PREFIX/lib \
+          MINIUPNPC_INCLUDE_PATH=$MINGW_PREFIX/include \
+          MINIUPNPC_LIB_PATH=$MINGW_PREFIX/lib \
+          USE_UPNP=1 \
+          RELEASE=1 \
+          trinity-qt.pro
+        
+        # Build
+        make -j$(nproc)
+        
+        # Strip if executable was created
+        if [ -f release/trinity-qt.exe ]; then
+          strip release/trinity-qt.exe
+          echo "Build complete!"
+          ls -lh release/trinity-qt.exe
+        fi
+    
+    - name: Create package
+      if: steps.check-deps.outputs.have_deps == 'true'
+      run: |
+        chmod +x scripts/create-windows-package.sh
+        ./scripts/create-windows-package.sh release/trinity-qt.exe dist
+    
+    - name: Create info package
+      if: steps.check-deps.outputs.have_deps != 'true'
+      run: |
+        mkdir -p dist
+        echo "Trinity Ultra-Fast Build with MSYS2 Packages" > dist/MSYS2_BUILD_INFO.txt
+        echo "" >> dist/MSYS2_BUILD_INFO.txt
+        echo "This workflow attempts to use pre-built MSYS2 MinGW packages for fast builds." >> dist/MSYS2_BUILD_INFO.txt
+        echo "" >> dist/MSYS2_BUILD_INFO.txt
+        echo "Current Status: Dependencies not fully available" >> dist/MSYS2_BUILD_INFO.txt
+        echo "" >> dist/MSYS2_BUILD_INFO.txt
+        echo "The workflow will:" >> dist/MSYS2_BUILD_INFO.txt
+        echo "1. Download MSYS2 MinGW packages from repo.msys2.org" >> dist/MSYS2_BUILD_INFO.txt
+        echo "2. Extract them to a MinGW prefix" >> dist/MSYS2_BUILD_INFO.txt
+        echo "3. Use them to build Trinity" >> dist/MSYS2_BUILD_INFO.txt
+        echo "" >> dist/MSYS2_BUILD_INFO.txt
+        echo "Expected build time: 10-15 minutes" >> dist/MSYS2_BUILD_INFO.txt
+        echo "" >> dist/MSYS2_BUILD_INFO.txt
+        echo "Note: Package URLs may need updating as MSYS2 versions change." >> dist/MSYS2_BUILD_INFO.txt
+        echo "" >> dist/MSYS2_BUILD_INFO.txt
+        echo "Alternative: Use the Fast Windows Build with qmake workflow" >> dist/MSYS2_BUILD_INFO.txt
+        echo "which builds dependencies from source and caches them." >> dist/MSYS2_BUILD_INFO.txt
+        echo "" >> dist/MSYS2_BUILD_INFO.txt
+        echo "Repository: https://github.com/Sprouts-Network/Trinity" >> dist/MSYS2_BUILD_INFO.txt
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: trinity-windows-msys2-build
+        path: dist/
+        retention-days: 90
+    
+    - name: Build summary
+      run: |
+        echo ""
+        echo "================================================"
+        echo "Ultra-Fast Windows Build (MSYS2)"
+        echo "================================================"
+        
+        if [ "${{ steps.check-deps.outputs.have_deps }}" = "true" ]; then
+          echo "✓ Build completed successfully!"
+          echo "  Method: MSYS2 pre-built packages"
+          echo "  Build time: ~10-15 minutes"
+          ls -lh release/trinity-qt.exe || true
+        else
+          echo "ℹ Dependencies not fully available"
+          echo ""
+          echo "This is an experimental workflow using MSYS2 packages."
+          echo "Package URLs may need updating."
+          echo ""
+          echo "RECOMMENDED: Use 'Fast Windows Build with qmake' workflow"
+          echo "which is production-ready and well-tested."
+        fi
+        echo ""

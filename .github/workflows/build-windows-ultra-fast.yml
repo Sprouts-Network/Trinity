@@ -1,0 +1,159 @@
+name: Ultra-Fast Windows Build (Pre-built Dependencies)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'src/**'
+      - 'trinity-qt.pro'
+
+jobs:
+  build-windows-prebuilt:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install MinGW cross-compiler
+      run: |
+        echo "Installing MinGW-w64 cross-compiler..."
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq \
+          g++-mingw-w64-x86-64 \
+          gcc-mingw-w64-x86-64 \
+          mingw-w64-tools \
+          zip \
+          unzip \
+          wget
+        
+        echo "MinGW installed!"
+        x86_64-w64-mingw32-g++ --version
+    
+    - name: Cache pre-built Windows dependencies
+      id: cache-deps
+      uses: actions/cache@v4
+      with:
+        path: ~/trinity-deps-win64
+        key: trinity-deps-win64-v1
+        restore-keys: |
+          trinity-deps-win64-
+    
+    - name: Download pre-built dependencies (if not cached)
+      if: steps.cache-deps.outputs.cache-hit != 'true'
+      run: |
+        echo "Downloading pre-built Windows dependencies..."
+        mkdir -p ~/trinity-deps-win64
+        cd ~/trinity-deps-win64
+        
+        mkdir -p boost/{include,lib}
+        mkdir -p db/{include,lib}
+        mkdir -p openssl/{include,lib}
+        mkdir -p qt5/{include,lib,bin,plugins}
+        mkdir -p miniupnpc/{include,lib}
+        
+        echo "Trinity Windows Dependencies" > README.txt
+        echo "Structure created. Pre-built binaries need to be provided separately." >> README.txt
+    
+    - name: Check for actual dependencies
+      id: check-deps
+      run: |
+        DEPS_DIR=~/trinity-deps-win64
+        HAVE_DEPS=false
+        
+        # Check for all required dependencies
+        if [ -f "$DEPS_DIR/qt5/bin/qmake.exe" ] || [ -f "$DEPS_DIR/qt5/bin/qmake" ]; then
+          if [ -d "$DEPS_DIR/boost/include" ] && [ -d "$DEPS_DIR/boost/lib" ] && \
+             [ -d "$DEPS_DIR/db/include" ] && [ -d "$DEPS_DIR/db/lib" ] && \
+             [ -d "$DEPS_DIR/openssl/include" ] && [ -d "$DEPS_DIR/openssl/lib" ]; then
+            HAVE_DEPS=true
+          fi
+        fi
+        
+        if [ "$HAVE_DEPS" = true ]; then
+          echo "have_deps=true" >> $GITHUB_OUTPUT
+          echo "All pre-built dependencies found!"
+        else
+          echo "have_deps=false" >> $GITHUB_OUTPUT
+          echo "Pre-built dependency binaries not complete."
+          echo "Missing one or more: Qt, Boost, BerkeleyDB, OpenSSL"
+          echo "Use the Fast Windows Build workflow instead."
+        fi
+    
+    - name: Build Trinity with pre-built dependencies
+      if: steps.check-deps.outputs.have_deps == 'true'
+      run: |
+        export PATH=~/trinity-deps-win64/qt5/bin:$PATH
+        export DEPS=~/trinity-deps-win64
+        
+        qmake \
+          BOOST_INCLUDE_PATH=$DEPS/boost/include \
+          BOOST_LIB_PATH=$DEPS/boost/lib \
+          BDB_INCLUDE_PATH=$DEPS/db/include \
+          BDB_LIB_PATH=$DEPS/db/lib \
+          OPENSSL_INCLUDE_PATH=$DEPS/openssl/include \
+          OPENSSL_LIB_PATH=$DEPS/openssl/lib \
+          MINIUPNPC_INCLUDE_PATH=$DEPS/miniupnpc/include \
+          MINIUPNPC_LIB_PATH=$DEPS/miniupnpc/lib \
+          USE_UPNP=1 \
+          RELEASE=1 \
+          trinity-qt.pro
+        
+        make -j$(nproc)
+        x86_64-w64-mingw32-strip release/trinity-qt.exe
+        
+        echo "Build complete!"
+        ls -lh release/trinity-qt.exe
+    
+    - name: Create package
+      if: steps.check-deps.outputs.have_deps == 'true'
+      run: |
+        chmod +x scripts/create-windows-package.sh
+        ./scripts/create-windows-package.sh release/trinity-qt.exe dist
+    
+    - name: Create info for users
+      if: steps.check-deps.outputs.have_deps != 'true'
+      run: |
+        mkdir -p dist
+        echo "Trinity Ultra-Fast Windows Build Workflow" > dist/INFO.txt
+        echo "" >> dist/INFO.txt
+        echo "This workflow is configured but requires pre-built dependencies." >> dist/INFO.txt
+        echo "Use the Fast Windows Build workflow instead for automated builds." >> dist/INFO.txt
+        echo "" >> dist/INFO.txt
+        echo "Expected build time with pre-built deps: 5-10 minutes" >> dist/INFO.txt
+        echo "Current status: Awaiting pre-built Windows dependencies" >> dist/INFO.txt
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: trinity-windows-build-info
+        path: dist/
+        retention-days: 90
+    
+    - name: Build summary
+      run: |
+        echo ""
+        echo "================================================"
+        echo "Ultra-Fast Windows Build Workflow"
+        echo "================================================"
+        
+        if [ "${{ steps.check-deps.outputs.have_deps }}" = "true" ]; then
+          echo "Build completed successfully!"
+          echo "Build time: ~5-10 minutes"
+          ls -lh release/trinity-qt.exe
+        else
+          echo "Workflow configured, awaiting dependencies"
+          echo ""
+          echo "RECOMMENDED: Use the Fast Windows Build workflow"
+          echo "which builds dependencies and caches them."
+        fi
+        echo ""

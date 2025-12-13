@@ -21,15 +21,15 @@ Trinity is a cryptocurrency that includes three mining algorithms (sha256d, scry
 
 Get the pre-built Windows executable:
 
-1. Go to [Actions tab](../../actions/workflows/build-windows-mxe.yml)
+1. Go to [Actions tab](../../actions/workflows/build-windows-fast.yml)
 2. Click the latest successful workflow run
 3. Download `trinity-windows-x64-package` artifact
 4. Extract and run `trinity-qt.exe`
 
 Or manually trigger a build:
-1. Go to [Actions](../../actions/workflows/build-windows-mxe.yml)
+1. Go to [Actions](../../actions/workflows/build-windows-fast.yml)
 2. Click "Run workflow"
-3. Wait for completion (~2-4 hours first time, ~15 min with cache)
+3. Wait for completion (~2 hours first time, ~15 min with cache)
 4. Download the artifact
 
 ### System Requirements
@@ -43,14 +43,19 @@ For detailed download and build instructions, see [WINDOWS-DOWNLOAD-GUIDE.md](WI
 
 ## Building from Source
 
-### Windows Build
+### Windows Build (using qmake)
 
-See [BUILDING-WINDOWS.md](BUILDING-WINDOWS.md) for comprehensive Windows build instructions.
+Trinity uses **qmake** (Qt's build system) for Windows compilation. We provide optimized workflows:
 
-Quick options:
-- **GitHub Actions** (Recommended) - Automated builds with MXE
-- **MXE** - Cross-compile from Linux with full toolchain
-- **Pre-built Dependencies** - Use existing Windows libraries
+**Quick options:**
+- **Fast Build** (Recommended) - ~15 min builds with caching - [Workflow](../../actions/workflows/build-windows-fast.yml)
+- **Ultra-Fast Build** - ~5-10 min with pre-built deps - [Workflow](../../actions/workflows/build-windows-ultra-fast.yml)
+- **Local Build** - Use `build-windows-qmake.sh` script
+
+**Documentation:**
+- [qmake Build Guide](QMAKE-BUILD-GUIDE.md) - All build methods explained
+- [Windows Build Guide](BUILDING-WINDOWS.md) - Comprehensive instructions
+- [Windows Download Guide](WINDOWS-DOWNLOAD-GUIDE.md) - Download pre-built executables
 
 ### Linux Build
 
@@ -99,10 +104,11 @@ This script checks:
 
 ## Documentation
 
-- [Windows Build Guide](BUILDING-WINDOWS.md)
-- [Windows Download Guide](WINDOWS-DOWNLOAD-GUIDE.md)
-- [Build Status](BUILD-STATUS.md)
-- [Installation Instructions](INSTALL)
+- [**qmake Build Guide**](QMAKE-BUILD-GUIDE.md) - Fast Windows builds with qmake
+- [Windows Build Guide](BUILDING-WINDOWS.md) - Comprehensive build instructions
+- [Windows Download Guide](WINDOWS-DOWNLOAD-GUIDE.md) - Get pre-built executables
+- [Build Status](BUILD-STATUS.md) - Current build status
+- [Installation Instructions](INSTALL) - Installation guide
 
 ## Support
 

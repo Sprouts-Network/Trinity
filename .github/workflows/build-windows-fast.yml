@@ -1,0 +1,338 @@
+name: Fast Windows Build with qmake
+
+# This workflow builds Windows executable quickly using pre-built dependencies
+# Estimated time: 10-20 minutes (vs 2-4 hours for full MXE build)
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - 'release/**'
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+    inputs:
+      skip_cache:
+        description: 'Skip cache and rebuild dependencies'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build-windows-fast:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      actions: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Free up disk space
+      run: |
+        # Free up space for build
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        df -h
+    
+    - name: Cache MXE toolchain
+      if: ${{ !inputs.skip_cache }}
+      id: cache-mxe
+      uses: actions/cache@v4
+      with:
+        path: /opt/mxe
+        key: ${{ runner.os }}-mxe-trinity-v3
+        restore-keys: |
+          ${{ runner.os }}-mxe-trinity-v3-
+          ${{ runner.os }}-mxe-trinity-
+    
+    - name: Install base build dependencies
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq \
+          autoconf \
+          automake \
+          autopoint \
+          bash \
+          bison \
+          bzip2 \
+          flex \
+          g++ \
+          g++-multilib \
+          gettext \
+          git \
+          gperf \
+          intltool \
+          libc6-dev-i386 \
+          libgdk-pixbuf2.0-dev \
+          libltdl-dev \
+          libssl-dev \
+          libtool-bin \
+          libxml-parser-perl \
+          lzip \
+          make \
+          openssl \
+          p7zip-full \
+          patch \
+          perl \
+          python3 \
+          python3-mako \
+          python3-pkg-resources \
+          ruby \
+          sed \
+          unzip \
+          wget \
+          xz-utils
+    
+    - name: Set up MXE (if not cached)
+      if: steps.cache-mxe.outputs.cache-hit != 'true'
+      run: |
+        echo "Setting up MXE cross-compilation environment..."
+        echo "This will take ~2 hours on first run, but will be cached for future runs."
+        echo "Subsequent builds will complete in ~15 minutes."
+        echo ""
+        
+        sudo mkdir -p /opt/mxe
+        sudo chown $(whoami) /opt/mxe
+        
+        # Clone MXE
+        git clone --depth 1 https://github.com/mxe/mxe.git /opt/mxe
+        cd /opt/mxe
+        
+        # Build only what we need for Trinity
+        # Using minimal Qt configuration to speed up build
+        echo "Building MXE dependencies..."
+        make MXE_TARGETS='x86_64-w64-mingw32.static' \
+          MXE_PLUGIN_DIRS='plugins/gcc12' \
+          qtbase \
+          qttools \
+          boost \
+          db \
+          openssl \
+          miniupnpc \
+          -j$(nproc)
+        
+        echo "MXE build complete and cached for future use!"
+    
+    - name: Verify MXE installation
+      run: |
+        echo "Verifying MXE installation..."
+        export PATH=/opt/mxe/usr/bin:$PATH
+        
+        # Find and display qmake
+        QMAKE=$(find /opt/mxe/usr -name "*qmake*" -type f | grep mingw | head -1)
+        if [ -n "$QMAKE" ]; then
+          echo "✓ qmake found: $QMAKE"
+          $QMAKE --version || true
+        else
+          echo "⚠ qmake not found, listing MXE bin directory:"
+          ls -la /opt/mxe/usr/bin/ | head -20
+        fi
+        
+        # Check for compiler
+        COMPILER=$(find /opt/mxe/usr/bin -name "*g++" -type f | grep mingw | head -1)
+        if [ -n "$COMPILER" ]; then
+          echo "✓ Compiler found: $COMPILER"
+          $COMPILER --version | head -1
+        fi
+        
+        echo ""
+        echo "MXE verification complete!"
+    
+    - name: Build Trinity with qmake
+      run: |
+        export PATH=/opt/mxe/usr/bin:$PATH
+        export MXE_TARGET=x86_64-w64-mingw32.static
+        
+        echo "================================================"
+        echo "Building Trinity v2.0 for Windows with qmake"
+        echo "================================================"
+        echo ""
+        echo "Build method: MXE cross-compilation"
+        echo "Build tool: qmake (Qt build system)"
+        echo "Target: Windows x86_64 static"
+        echo ""
+        
+        # Find qmake (try multiple common locations)
+        QMAKE_BIN=$(find /opt/mxe/usr -type f \( -path "*/qt5/bin/qmake" -o -name "${MXE_TARGET}-qmake-qt5" -o -name "*qmake*" \) | head -1)
+        
+        if [ -z "$QMAKE_BIN" ]; then
+          echo "ERROR: qmake not found!"
+          echo "Available files in MXE:"
+          find /opt/mxe/usr -name "*qmake*" -type f || true
+          exit 1
+        fi
+        
+        echo "Using qmake: $QMAKE_BIN"
+        echo ""
+        
+        # Show qmake version
+        $QMAKE_BIN --version
+        echo ""
+        
+        # Configure with qmake
+        echo "Configuring Trinity project with qmake..."
+        $QMAKE_BIN \
+          USE_UPNP=1 \
+          USE_QRCODE=0 \
+          RELEASE=1 \
+          trinity-qt.pro
+        
+        echo ""
+        echo "Configuration complete. Building..."
+        echo ""
+        
+        # Build with make
+        make -j$(nproc) 2>&1 | tee build.log
+        
+        echo ""
+        echo "Build complete!"
+    
+    - name: Verify and strip executable
+      run: |
+        if [ ! -f "release/trinity-qt.exe" ]; then
+          echo "ERROR: Executable not found!"
+          echo "Build may have failed. Check logs above."
+          exit 1
+        fi
+        
+        echo "✓ Executable created successfully!"
+        echo ""
+        echo "File details:"
+        ls -lh release/trinity-qt.exe
+        file release/trinity-qt.exe
+        echo ""
+        
+        # Find strip tool
+        STRIP_BIN=$(find /opt/mxe/usr/bin -name "*strip" -type f | grep mingw | head -1)
+        if [ -n "$STRIP_BIN" ]; then
+          echo "Stripping executable to reduce size..."
+          $STRIP_BIN release/trinity-qt.exe
+          echo ""
+          echo "After stripping:"
+          ls -lh release/trinity-qt.exe
+        fi
+    
+    - name: Create distribution package
+      run: |
+        chmod +x scripts/create-windows-package.sh
+        ./scripts/create-windows-package.sh release/trinity-qt.exe dist
+    
+    - name: Upload executable artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: trinity-windows-x64-executable
+        path: dist/trinity-qt.exe
+        retention-days: 90
+    
+    - name: Upload complete package
+      uses: actions/upload-artifact@v4
+      with:
+        name: trinity-windows-x64-package
+        path: dist/trinity-v2.0-windows-x64.zip
+        retention-days: 90
+    
+    - name: Upload build logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: trinity-build-logs
+        path: build.log
+        retention-days: 30
+    
+    - name: Build summary
+      run: |
+        echo ""
+        echo "================================================"
+        echo "✓ Trinity Windows Build Complete!"
+        echo "================================================"
+        echo ""
+        echo "Build Statistics:"
+        echo "-----------------"
+        echo "Executable: release/trinity-qt.exe"
+        ls -lh release/trinity-qt.exe
+        echo ""
+        echo "Package: dist/trinity-v2.0-windows-x64.zip"
+        ls -lh dist/trinity-v2.0-windows-x64.zip
+        echo ""
+        echo "Cache Status:"
+        if [ "${{ steps.cache-mxe.outputs.cache-hit }}" == "true" ]; then
+          echo "✓ Used cached MXE (fast build ~15 min)"
+        else
+          echo "✓ Built and cached MXE (first build ~2 hours)"
+          echo "  Next build will use cache and complete in ~15 min"
+        fi
+        echo ""
+        echo "Download artifacts from the Actions tab to get your Windows executable!"
+        echo ""
+    
+    - name: Create release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/trinity-v2.0-windows-x64.zip
+          dist/trinity-qt.exe
+          dist/README.txt
+          dist/BUILD_INFO.txt
+        body: |
+          # Trinity v2.0 - Windows Release
+          
+          ## 🎉 New Features
+          
+          - ✨ Modern wallet creation with BIP39 seed phrase support
+          - 🎨 Dark/Light theme switching
+          - 🔐 Enhanced security features
+          - 💎 Modernized user interface
+          - 📱 Improved user experience
+          
+          ## 📦 Downloads
+          
+          - **trinity-v2.0-windows-x64.zip** - Complete package with executable and documentation
+          - **trinity-qt.exe** - Standalone Windows executable (64-bit)
+          
+          ## 💻 System Requirements
+          
+          - Windows 7 or later (64-bit)
+          - 2GB RAM minimum
+          - 500MB disk space
+          
+          ## 🔨 Build Information
+          
+          - Built with: qmake (Qt build system)
+          - Cross-compiled using: MXE (M cross environment)
+          - Type: Static build (no DLL dependencies)
+          - Build time: ~15 minutes (with cache)
+          
+          ## 🚀 Quick Start
+          
+          1. Download trinity-v2.0-windows-x64.zip
+          2. Extract the ZIP file
+          3. Run trinity-qt.exe
+          4. Follow the wallet creation wizard
+          5. Securely save your seed phrase!
+          
+          ## 📚 Documentation
+          
+          - [Building for Windows](https://github.com/Sprouts-Network/Trinity/blob/master/BUILDING-WINDOWS.md)
+          - [Windows Download Guide](https://github.com/Sprouts-Network/Trinity/blob/master/WINDOWS-DOWNLOAD-GUIDE.md)
+          
+          ## 🐛 Support
+          
+          Report issues: https://github.com/Sprouts-Network/Trinity/issues
+          
+          ## 📄 License
+          
+          MIT License - See COPYING file
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

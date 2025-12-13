@@ -70,16 +70,22 @@ jobs:
         DEPS_DIR=~/trinity-deps-win64
         HAVE_DEPS=false
         
+        # Check for all required dependencies
         if [ -f "$DEPS_DIR/qt5/bin/qmake.exe" ] || [ -f "$DEPS_DIR/qt5/bin/qmake" ]; then
-          HAVE_DEPS=true
+          if [ -d "$DEPS_DIR/boost/include" ] && [ -d "$DEPS_DIR/boost/lib" ] && \
+             [ -d "$DEPS_DIR/db/include" ] && [ -d "$DEPS_DIR/db/lib" ] && \
+             [ -d "$DEPS_DIR/openssl/include" ] && [ -d "$DEPS_DIR/openssl/lib" ]; then
+            HAVE_DEPS=true
+          fi
         fi
         
         if [ "$HAVE_DEPS" = true ]; then
           echo "have_deps=true" >> $GITHUB_OUTPUT
-          echo "Pre-built dependencies found!"
+          echo "All pre-built dependencies found!"
         else
           echo "have_deps=false" >> $GITHUB_OUTPUT
-          echo "Pre-built dependency binaries not available."
+          echo "Pre-built dependency binaries not complete."
+          echo "Missing one or more: Qt, Boost, BerkeleyDB, OpenSSL"
           echo "Use the Fast Windows Build workflow instead."
         fi
     

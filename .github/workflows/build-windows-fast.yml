@@ -49,7 +49,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /opt/mxe
-        key: ${{ runner.os }}-mxe-trinity-v3-${{ hashFiles('.github/workflows/build-windows-fast.yml') }}
+        key: ${{ runner.os }}-mxe-trinity-v3
         restore-keys: |
           ${{ runner.os }}-mxe-trinity-v3-
           ${{ runner.os }}-mxe-trinity-
@@ -161,15 +161,8 @@ jobs:
         echo "Target: Windows x86_64 static"
         echo ""
         
-        # Find qmake
-        QMAKE_BIN=$(find /opt/mxe/usr -path "*/qt5/bin/qmake" -type f 2>/dev/null | head -1)
-        if [ -z "$QMAKE_BIN" ]; then
-          QMAKE_BIN=$(find /opt/mxe/usr -name "${MXE_TARGET}-qmake-qt5" -type f 2>/dev/null | head -1)
-        fi
-        if [ -z "$QMAKE_BIN" ]; then
-          # Try alternative naming
-          QMAKE_BIN=$(find /opt/mxe/usr/bin -name "*qmake*" -type f | head -1)
-        fi
+        # Find qmake (try multiple common locations)
+        QMAKE_BIN=$(find /opt/mxe/usr -type f \( -path "*/qt5/bin/qmake" -o -name "${MXE_TARGET}-qmake-qt5" -o -name "*qmake*" \) | head -1)
         
         if [ -z "$QMAKE_BIN" ]; then
           echo "ERROR: qmake not found!"

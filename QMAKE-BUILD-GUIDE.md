@@ -290,5 +290,4 @@ All successful builds produce:
 
 ---
 
-**Last Updated:** 2025-12-13
 **Trinity Version:** 2.0

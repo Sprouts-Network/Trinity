@@ -1,10 +1,12 @@
 #!/bin/bash
 # Creates distribution package for Windows builds
+# Usage: ./create-windows-package.sh [exe-path] [output-dir] [version]
 
 set -e
 
 EXE_PATH="${1:-release/trinity-qt.exe}"
 OUTPUT_DIR="${2:-dist}"
+VERSION="${3:-${TRINITY_VERSION:-v2.0}}"
 
 mkdir -p "$OUTPUT_DIR"
 cp "$EXE_PATH" "$OUTPUT_DIR/"
@@ -42,7 +44,7 @@ EOF
 
 # Create ZIP
 cd "$OUTPUT_DIR"
-zip -9 trinity-v2.0-windows-x64.zip trinity-qt.exe README.txt BUILD_INFO.txt
+zip -9 "trinity-${VERSION}-windows-x64.zip" trinity-qt.exe README.txt BUILD_INFO.txt
 cd ..
 
 echo "Package created in $OUTPUT_DIR/"

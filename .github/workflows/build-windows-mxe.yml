@@ -141,9 +141,9 @@ jobs:
         # Try explicit known paths first
         QMAKE_BIN=""
         for candidate in \
-          "/opt/mxe/usr/x86_64-w64-mingw32.static/qt5/bin/qmake" \
-          "/opt/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5" \
-          "/opt/mxe/usr/x86_64-w64-mingw32.static/bin/qmake"; do
+          "/opt/mxe/usr/${MXE_TARGET}/qt5/bin/qmake" \
+          "/opt/mxe/usr/bin/${MXE_TARGET}-qmake-qt5" \
+          "/opt/mxe/usr/${MXE_TARGET}/bin/qmake"; do
           if [ -f "$candidate" ] && [ -x "$candidate" ]; then
             QMAKE_BIN="$candidate"
             echo "Found qmake at explicit path: $QMAKE_BIN"
@@ -165,9 +165,9 @@ jobs:
         if [ -z "$QMAKE_BIN" ]; then
           echo "ERROR: qmake not found!"
           echo "Searched paths:"
-          echo "  - /opt/mxe/usr/x86_64-w64-mingw32.static/qt5/bin/qmake"
-          echo "  - /opt/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5"
-          echo "  - /opt/mxe/usr/x86_64-w64-mingw32.static/bin/qmake"
+          echo "  - /opt/mxe/usr/${MXE_TARGET}/qt5/bin/qmake"
+          echo "  - /opt/mxe/usr/bin/${MXE_TARGET}-qmake-qt5"
+          echo "  - /opt/mxe/usr/${MXE_TARGET}/bin/qmake"
           echo ""
           echo "All files matching *qmake* (including non-executables):"
           find /opt/mxe/usr -name "*qmake*" -type f 2>/dev/null || true

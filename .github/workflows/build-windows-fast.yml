@@ -171,7 +171,11 @@ jobs:
           QMAKE_BIN="/opt/mxe/usr/bin/${MXE_TARGET}-qmake-qt5"
         else
           # Fallback: search for executable qmake files only
-          QMAKE_BIN=$(find /opt/mxe/usr -type f -executable \( -path "*/qt5/bin/qmake" -o -name "${MXE_TARGET}-qmake-qt5" -o -name "*qmake*" \) | grep -v "\.h$" | grep mingw | head -1)
+          QMAKE_BIN=$(find /opt/mxe/usr -type f -executable \
+            \( -path "*/qt5/bin/qmake" -o -name "${MXE_TARGET}-qmake-qt5" -o -name "*qmake*" \) \
+            | grep -v "\.h$" \
+            | grep mingw \
+            | head -1)
         fi
         
         if [ -z "$QMAKE_BIN" ] || [ ! -x "$QMAKE_BIN" ]; then

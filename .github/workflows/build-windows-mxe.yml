@@ -49,10 +49,10 @@ jobs:
       run: |
         # Fix ownership and permissions of cached MXE files
         sudo chown -R $(whoami):$(whoami) /opt/mxe || true
-        # Ensure binaries are executable
+        # Ensure key binaries are executable
         find /opt/mxe -type f -name "qmake" -exec chmod +x {} \; 2>/dev/null || true
         find /opt/mxe -type f -name "*-qmake-qt5" -exec chmod +x {} \; 2>/dev/null || true
-        find /opt/mxe/usr/bin -type f -exec chmod +x {} \; 2>/dev/null || true
+        find /opt/mxe/usr/bin -type f \( -name "*-gcc" -o -name "*-g++" -o -name "*-strip" -o -name "*qmake*" \) -exec chmod +x {} \; 2>/dev/null || true
     
     - name: Install MXE build dependencies
       run: |
@@ -197,7 +197,10 @@ jobs:
         file release/trinity-qt.exe
         
         # Strip the executable
-        STRIP_BIN=$(find /opt/mxe/usr/bin -name "*strip" -type f -executable 2>/dev/null | grep mingw | head -1)
+        STRIP_BIN=$(find /opt/mxe/usr/bin -name "*mingw*strip" -type f -executable 2>/dev/null | head -1)
+        if [ -z "$STRIP_BIN" ]; then
+          STRIP_BIN=$(find /opt/mxe/usr/bin -name "*-strip" -type f -executable 2>/dev/null | head -1)
+        fi
         if [ -z "$STRIP_BIN" ]; then
           echo "Warning: strip binary not found, skipping stripping"
         else

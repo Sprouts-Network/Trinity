@@ -44,6 +44,16 @@ jobs:
           mxe-x86-64-static-qt5-minimal-
           mxe-x86-64-static-
     
+    - name: Fix MXE cache permissions
+      if: steps.cache-mxe.outputs.cache-hit == 'true'
+      run: |
+        # Fix ownership and permissions of cached MXE files
+        sudo chown -R $(whoami):$(whoami) /opt/mxe || true
+        # Ensure binaries are executable
+        find /opt/mxe -type f -name "qmake" -exec chmod +x {} \; 2>/dev/null || true
+        find /opt/mxe -type f -name "*-qmake-qt5" -exec chmod +x {} \; 2>/dev/null || true
+        find /opt/mxe/usr/bin -type f -exec chmod +x {} \; 2>/dev/null || true
+    
     - name: Install MXE build dependencies
       run: |
         sudo apt-get update
@@ -108,8 +118,15 @@ jobs:
     - name: Verify MXE installation
       run: |
         export PATH=/opt/mxe/usr/bin:$PATH
+        echo "Checking for qmake executables..."
+        find /opt/mxe/usr/bin -type f -executable -name "*qmake*" 2>/dev/null || true
+        find /opt/mxe/usr/x86_64-w64-mingw32.static/qt5/bin -type f -executable -name "qmake" 2>/dev/null || true
+        echo ""
+        echo "Checking MXE bin directory..."
         ls -la /opt/mxe/usr/bin/ | grep qmake || true
-        ls -la /opt/mxe/usr/x86_64-w64-mingw32.static/bin/ || true
+        echo ""
+        echo "Checking target bin directory..."
+        ls -la /opt/mxe/usr/x86_64-w64-mingw32.static/bin/ 2>/dev/null || true
     
     - name: Build Trinity for Windows
       run: |
@@ -121,14 +138,42 @@ jobs:
         echo ""
         
         # Find the qmake binary
-        QMAKE_BIN=$(find /opt/mxe/usr -path "*/qt5/bin/qmake" -type f | head -1)
+        # Try explicit known paths first
+        QMAKE_BIN=""
+        for candidate in \
+          "/opt/mxe/usr/x86_64-w64-mingw32.static/qt5/bin/qmake" \
+          "/opt/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5" \
+          "/opt/mxe/usr/x86_64-w64-mingw32.static/bin/qmake"; do
+          if [ -f "$candidate" ] && [ -x "$candidate" ]; then
+            QMAKE_BIN="$candidate"
+            echo "Found qmake at explicit path: $QMAKE_BIN"
+            break
+          fi
+        done
+        
+        # Fall back to searching, but only for executable files
         if [ -z "$QMAKE_BIN" ]; then
-          QMAKE_BIN=$(find /opt/mxe/usr -name "qmake*" -type f | head -1)
+          QMAKE_BIN=$(find /opt/mxe/usr -path "*/qt5/bin/qmake" -type f -executable 2>/dev/null | head -1)
+        fi
+        if [ -z "$QMAKE_BIN" ]; then
+          QMAKE_BIN=$(find /opt/mxe/usr/bin -name "*qmake*" -type f -executable 2>/dev/null | head -1)
+        fi
+        if [ -z "$QMAKE_BIN" ]; then
+          QMAKE_BIN=$(find /opt/mxe/usr -name "qmake" -type f -executable 2>/dev/null | head -1)
         fi
 
         if [ -z "$QMAKE_BIN" ]; then
           echo "ERROR: qmake not found!"
-          find /opt/mxe/usr -name "*qmake*" -type f || true
+          echo "Searched paths:"
+          echo "  - /opt/mxe/usr/x86_64-w64-mingw32.static/qt5/bin/qmake"
+          echo "  - /opt/mxe/usr/bin/x86_64-w64-mingw32.static-qmake-qt5"
+          echo "  - /opt/mxe/usr/x86_64-w64-mingw32.static/bin/qmake"
+          echo ""
+          echo "All files matching *qmake* (including non-executables):"
+          find /opt/mxe/usr -name "*qmake*" -type f 2>/dev/null || true
+          echo ""
+          echo "Executable files matching *qmake*:"
+          find /opt/mxe/usr -name "*qmake*" -type f -executable 2>/dev/null || true
           exit 1
         fi
         
@@ -152,12 +197,16 @@ jobs:
         file release/trinity-qt.exe
         
         # Strip the executable
-        STRIP_BIN=$(find /opt/mxe/usr -name "*strip" -type f | grep mingw | head -1)
-        $STRIP_BIN release/trinity-qt.exe
-        
-        echo ""
-        echo "After stripping:"
-        ls -lh release/trinity-qt.exe
+        STRIP_BIN=$(find /opt/mxe/usr/bin -name "*strip" -type f -executable 2>/dev/null | grep mingw | head -1)
+        if [ -z "$STRIP_BIN" ]; then
+          echo "Warning: strip binary not found, skipping stripping"
+        else
+          echo "Using strip: $STRIP_BIN"
+          $STRIP_BIN release/trinity-qt.exe
+          echo ""
+          echo "After stripping:"
+          ls -lh release/trinity-qt.exe
+        fi
     
     - name: Prepare distribution package
       run: |

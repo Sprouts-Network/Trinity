@@ -120,15 +120,16 @@ jobs:
         echo "Using MXE cross-compilation toolchain"
         echo ""
         
-        # Find the qmake binary
-        QMAKE_BIN=$(find /opt/mxe/usr -path "*/qt5/bin/qmake" -type f | head -1)
+        # Find the qmake binary (executable files only)
+        QMAKE_BIN=$(find /opt/mxe/usr -path "*/qt5/bin/qmake" -type f -executable | head -1)
         if [ -z "$QMAKE_BIN" ]; then
-          QMAKE_BIN=$(find /opt/mxe/usr -name "qmake*" -type f | head -1)
+          QMAKE_BIN=$(find /opt/mxe/usr -name "qmake*" -type f -executable | grep -v "\.h$" | head -1)
         fi
 
-        if [ -z "$QMAKE_BIN" ]; then
-          echo "ERROR: qmake not found!"
-          find /opt/mxe/usr -name "*qmake*" -type f || true
+        if [ -z "$QMAKE_BIN" ] || [ ! -x "$QMAKE_BIN" ]; then
+          echo "ERROR: qmake executable not found!"
+          echo "Available qmake-related executables:"
+          find /opt/mxe/usr -name "*qmake*" -type f -executable || true
           exit 1
         fi
         

@@ -15,6 +15,18 @@ Trinity is a cryptocurrency that includes three mining algorithms (sha256d, scry
 - 💎 **Modernized UI** - Updated interface with improved user experience
 - 📱 **Better Onboarding** - Guided wallet creation with seed phrase confirmation
 
+### Mining Pool & Block Explorer
+
+Trinity now includes a complete mining pool and block explorer solution! 
+
+- ⛏️ **Mining Pool** - Easy-to-deploy pool server with automatic payments
+- 🔍 **Block Explorer** - Web-based blockchain explorer with search
+- 👥 **Worker Management** - Track individual miner statistics
+- 💰 **Automatic Payments** - Proportional rewards paid per block
+- 🎛️ **Admin Panel** - Full administrative control and monitoring
+
+**Quick Start**: See [POOL-DEPLOYMENT.md](POOL-DEPLOYMENT.md) for setup instructions.
+
 ## Download Windows Executable
 
 ### Quick Download
@@ -99,10 +111,18 @@ This script checks:
 
 ## Documentation
 
+### Wallet & Mining
 - [Windows Build Guide](BUILDING-WINDOWS.md)
 - [Windows Download Guide](WINDOWS-DOWNLOAD-GUIDE.md)
 - [Build Status](BUILD-STATUS.md)
 - [Installation Instructions](INSTALL)
+
+### Mining Pool & Explorer
+- [Pool Deployment Guide](POOL-DEPLOYMENT.md) - Complete setup instructions
+- [Pool Implementation Details](POOL-IMPLEMENTATION.md) - Technical overview
+- [Pool Documentation](pool-explorer/README.md) - Comprehensive guide
+- [Quick Start Guide](pool-explorer/QUICKSTART.md) - Fast setup
+- [Mining Configuration](pool-explorer/MINING-GUIDE.md) - Miner setup
 
 ## Support
 

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-4">Trinity Mining Pool</h1>
+        <p class="lead">Join our mining pool and start earning Trinity coins today!</p>
+    </div>
+</div>
+
+<!-- Pool Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Pool Hashrate</h6>
+                <h3 class="card-title">{{ pool_stats.total_hashrate|hashrate }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Active Workers</h6>
+                <h3 class="card-title">{{ pool_stats.active_workers }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Blocks Found</h6>
+                <h3 class="card-title">{{ pool_stats.blocks_found }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Paid</h6>
+                <h3 class="card-title">{{ pool_stats.total_paid|amount }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Network Information -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-globe"></i> Network Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Block Height:</th>
+                        <td>{{ network_info.blocks if network_info else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Difficulty (SHA256D):</th>
+                        <td>{{ "%.8f"|format(mining_info.difficulty_sha256d) if mining_info and 'difficulty_sha256d' in mining_info else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Difficulty (Scrypt):</th>
+                        <td>{{ "%.8f"|format(mining_info.difficulty_scrypt) if mining_info and 'difficulty_scrypt' in mining_info else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Difficulty (Groestl):</th>
+                        <td>{{ "%.8f"|format(mining_info.difficulty_groestl) if mining_info and 'difficulty_groestl' in mining_info else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Connections:</th>
+                        <td>{{ network_info.connections if network_info else 'N/A' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-graph-up"></i> Pool Statistics</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Total Workers:</th>
+                        <td>{{ pool_stats.total_workers }}</td>
+                    </tr>
+                    <tr>
+                        <th>Active Workers:</th>
+                        <td>{{ pool_stats.active_workers }}</td>
+                    </tr>
+                    <tr>
+                        <th>Pool Hashrate:</th>
+                        <td>{{ pool_stats.total_hashrate|hashrate }}</td>
+                    </tr>
+                    <tr>
+                        <th>Blocks Found:</th>
+                        <td>{{ pool_stats.blocks_found }}</td>
+                    </tr>
+                    <tr>
+                        <th>Total Paid:</th>
+                        <td>{{ pool_stats.total_paid|amount }} TRIN</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Blocks -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-box"></i> Recent Blocks</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_blocks %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Height</th>
+                                <th>Hash</th>
+                                <th>Time</th>
+                                <th>Finder</th>
+                                <th>Difficulty</th>
+                                <th>Reward</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for block in recent_blocks %}
+                            <tr>
+                                <td><a href="{{ url_for('block_detail', block_hash=block.hash) }}">{{ block.height }}</a></td>
+                                <td class="block-hash">{{ block.hash[:16] }}...</td>
+                                <td>{{ block.timestamp|datetime }}</td>
+                                <td>
+                                    {% if block.finder %}
+                                    <a href="{{ url_for('worker_stats', address=block.finder) }}">{{ block.finder[:16] }}...</a>
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </td>
+                                <td>{{ "%.4f"|format(block.difficulty) }}</td>
+                                <td>{{ block.reward|amount }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                    <a href="{{ url_for('blocks') }}" class="btn btn-primary">View All Blocks</a>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">No blocks found yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Getting Started -->
+<div class="row">
+    <div class="col">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h3>Ready to Start Mining?</h3>
+                <p>Check out our mining guide to get started with Trinity Pool</p>
+                <a href="{{ url_for('how_to_mine') }}" class="btn btn-primary btn-lg">How to Mine</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh stats every 30 seconds
+setInterval(function() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            // Update stats if needed
+            location.reload();
+        })
+        .catch(error => console.error('Error fetching stats:', error));
+}, 30000);
+</script>
+{% endblock %}

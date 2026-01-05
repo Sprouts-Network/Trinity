@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Stats - Trinity Pool{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Worker Statistics</h2>
+        <p class="text-muted">Address: <code>{{ worker.address }}</code></p>
+    </div>
+</div>
+
+<!-- Worker Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Current Hashrate</h6>
+                <h3 class="card-title">{{ worker.hashrate|hashrate }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Valid Shares</h6>
+                <h3 class="card-title">{{ worker.valid_shares }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Pending Balance</h6>
+                <h3 class="card-title">{{ worker.pending_balance|amount }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Paid</h6>
+                <h3 class="card-title">{{ worker.total_paid|amount }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Worker Details -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> Worker Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Last Seen:</th>
+                        <td>{{ worker.last_seen|datetime }}</td>
+                    </tr>
+                    <tr>
+                        <th>Total Shares:</th>
+                        <td>{{ worker.total_shares }}</td>
+                    </tr>
+                    <tr>
+                        <th>Valid Shares:</th>
+                        <td>{{ worker.valid_shares }}</td>
+                    </tr>
+                    <tr>
+                        <th>Invalid Shares:</th>
+                        <td>{{ worker.invalid_shares }}</td>
+                    </tr>
+                    <tr>
+                        <th>Share Acceptance:</th>
+                        <td>
+                            {% if worker.total_shares > 0 %}
+                            {{ "%.2f"|format((worker.valid_shares / worker.total_shares) * 100) }}%
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Difficulty:</th>
+                        <td>{{ "%.8f"|format(worker.difficulty) }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-cash-stack"></i> Earnings Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Pending Balance:</th>
+                        <td>{{ worker.pending_balance|amount }} TRIN</td>
+                    </tr>
+                    <tr>
+                        <th>Total Paid:</th>
+                        <td>{{ worker.total_paid|amount }} TRIN</td>
+                    </tr>
+                    <tr>
+                        <th>Total Earned:</th>
+                        <td>{{ (worker.pending_balance + worker.total_paid)|amount }} TRIN</td>
+                    </tr>
+                    <tr>
+                        <th>Blocks Found:</th>
+                        <td>{{ blocks_found|length }}</td>
+                    </tr>
+                    <tr>
+                        <th>Payments Received:</th>
+                        <td>{{ payments|length }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Blocks Found -->
+{% if blocks_found %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-trophy"></i> Blocks Found</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Height</th>
+                                <th>Hash</th>
+                                <th>Time</th>
+                                <th>Reward</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for block in blocks_found %}
+                            <tr>
+                                <td><a href="{{ url_for('block_detail', block_hash=block.hash) }}">{{ block.height }}</a></td>
+                                <td class="block-hash">{{ block.hash[:32] }}...</td>
+                                <td>{{ block.timestamp|datetime }}</td>
+                                <td>{{ block.reward|amount }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Payment History -->
+{% if payments %}
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-receipt"></i> Payment History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Block</th>
+                                <th>Status</th>
+                                <th>TX ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.timestamp|datetime }}</td>
+                                <td>{{ payment.amount|amount }}</td>
+                                <td><a href="{{ url_for('block_detail', block_hash=payment.block_height) }}">{{ payment.block_height }}</a></td>
+                                <td>
+                                    {% if payment.status == 'confirmed' %}
+                                    <span class="badge bg-success">Confirmed</span>
+                                    {% elif payment.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{{ payment.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if payment.txid %}
+                                    <code>{{ payment.txid[:16] }}...</code>
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

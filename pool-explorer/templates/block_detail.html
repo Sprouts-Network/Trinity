@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Block {{ block.height }} - Trinity Explorer{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Block #{{ block.height }}</h1>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5><i class="bi bi-box"></i> Block Information</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-sm">
+            <tr>
+                <th style="width: 200px;">Height:</th>
+                <td>{{ block.height }}</td>
+            </tr>
+            <tr>
+                <th>Hash:</th>
+                <td><code>{{ block.hash }}</code></td>
+            </tr>
+            <tr>
+                <th>Previous Hash:</th>
+                <td><code>{{ block.prev_hash }}</code></td>
+            </tr>
+            <tr>
+                <th>Timestamp:</th>
+                <td>{{ block.timestamp|datetime }}</td>
+            </tr>
+            <tr>
+                <th>Difficulty:</th>
+                <td>{{ "%.8f"|format(block.difficulty) }}</td>
+            </tr>
+            <tr>
+                <th>Algorithm:</th>
+                <td>{{ block.algo }}</td>
+            </tr>
+            <tr>
+                <th>Reward:</th>
+                <td>{{ block.reward|amount }} TRIN</td>
+            </tr>
+            <tr>
+                <th>Finder:</th>
+                <td>
+                    {% if block.finder %}
+                    <a href="{{ url_for('worker_stats', address=block.finder) }}">{{ block.finder }}</a>
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Confirmations:</th>
+                <td>{{ block.confirmations }}</td>
+            </tr>
+            <tr>
+                <th>Transactions:</th>
+                <td>{{ block.tx_count }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+{% if block_info %}
+<div class="card">
+    <div class="card-header">
+        <h5><i class="bi bi-info-circle"></i> Additional Information</h5>
+    </div>
+    <div class="card-body">
+        <pre class="bg-light p-3"><code>{{ block_info|tojson(indent=2) }}</code></pre>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

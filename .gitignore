@@ -32,4 +32,12 @@ build
 Makefile
 .qmake.stash
 
-s
+# Pool & Explorer
+pool-explorer/logs/
+pool-explorer/data/
+pool-explorer/*.db
+pool-explorer/.env
+pool-explorer/venv/
+pool-explorer/__pycache__/
+pool-explorer/**/__pycache__/
+pool-explorer/*.pyc

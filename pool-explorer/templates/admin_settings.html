@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Settings - Trinity Pool{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Pool Settings</h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="POST">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-gear"></i> General Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Pool Fee (%)</label>
+                        <input type="number" class="form-control" value="{{ config.POOL_FEE * 100 }}" step="0.01" min="0" max="100">
+                        <small class="text-muted">Current: {{ config.POOL_FEE * 100 }}%</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Minimum Payout Threshold</label>
+                        <input type="number" class="form-control" value="{{ config.PAYOUT_THRESHOLD }}" step="0.01" min="0">
+                        <small class="text-muted">Current: {{ config.PAYOUT_THRESHOLD }} TRIN</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Minimum Difficulty</label>
+                        <input type="number" class="form-control" value="{{ config.MIN_DIFFICULTY }}" step="0.0001" min="0">
+                        <small class="text-muted">Current: {{ config.MIN_DIFFICULTY }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-server"></i> RPC Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">RPC Host</label>
+                        <input type="text" class="form-control" value="{{ config.RPC_HOST }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">RPC Port</label>
+                        <input type="number" class="form-control" value="{{ config.RPC_PORT }}" readonly>
+                    </div>
+                    <div class="alert alert-info">
+                        <small><i class="bi bi-info-circle"></i> RPC settings are configured via environment variables</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-shield-lock"></i> Security Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Admin Username</label>
+                        <input type="text" class="form-control" value="{{ config.ADMIN_USERNAME }}" readonly>
+                    </div>
+                    <div class="alert alert-warning">
+                        <strong>Security Notice:</strong><br>
+                        Admin credentials should be changed in the configuration file or environment variables.
+                        Current password: <code>{{ config.ADMIN_PASSWORD }}</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-hdd-network"></i> Pool Server Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Stratum Host</label>
+                        <input type="text" class="form-control" value="{{ config.STRATUM_HOST }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Stratum Port</label>
+                        <input type="number" class="form-control" value="{{ config.STRATUM_PORT }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Web Port</label>
+                        <input type="number" class="form-control" value="{{ config.WEB_PORT }}" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-info-circle"></i> Configuration Help</h5>
+            </div>
+            <div class="card-body">
+                <h6>Environment Variables</h6>
+                <p>Most settings can be configured via environment variables:</p>
+                <ul class="small">
+                    <li><code>POOL_FEE</code></li>
+                    <li><code>PAYOUT_THRESHOLD</code></li>
+                    <li><code>MIN_DIFFICULTY</code></li>
+                    <li><code>ADMIN_USERNAME</code></li>
+                    <li><code>ADMIN_PASSWORD</code></li>
+                    <li><code>RPC_HOST</code></li>
+                    <li><code>RPC_PORT</code></li>
+                    <li><code>RPC_USER</code></li>
+                    <li><code>RPC_PASSWORD</code></li>
+                </ul>
+                
+                <h6 class="mt-3">Configuration File</h6>
+                <p>Edit <code>config/config.py</code> to change default settings.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

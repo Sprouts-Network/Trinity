@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Trinity Pool{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Admin Dashboard</h1>
+        <p class="text-muted">Welcome, Administrator</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('admin_logout') }}" class="btn btn-danger">Logout</a>
+    </div>
+</div>
+
+<!-- Admin Navigation -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">Dashboard</a>
+            <a href="{{ url_for('admin_workers') }}" class="btn btn-outline-primary">Workers</a>
+            <a href="{{ url_for('admin_blocks') }}" class="btn btn-outline-primary">Blocks</a>
+            <a href="{{ url_for('admin_payments') }}" class="btn btn-outline-primary">Payments</a>
+            <a href="{{ url_for('admin_settings') }}" class="btn btn-outline-primary">Settings</a>
+        </div>
+    </div>
+</div>
+
+<!-- Pool Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card bg-primary text-white">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2">Total Workers</h6>
+                <h2 class="card-title">{{ pool_stats.total_workers }}</h2>
+                <small>Active: {{ pool_stats.active_workers }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card bg-success text-white">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2">Pool Hashrate</h6>
+                <h2 class="card-title">{{ pool_stats.total_hashrate|hashrate }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card bg-info text-white">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2">Blocks Found</h6>
+                <h2 class="card-title">{{ pool_stats.blocks_found }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card bg-warning text-white">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2">Total Paid</h6>
+                <h2 class="card-title">{{ pool_stats.total_paid|amount }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Network Info -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-globe"></i> Network Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    {% if network_info %}
+                    <tr>
+                        <th>Block Height:</th>
+                        <td>{{ network_info.blocks }}</td>
+                    </tr>
+                    <tr>
+                        <th>Connections:</th>
+                        <td>{{ network_info.connections }}</td>
+                    </tr>
+                    <tr>
+                        <th>Version:</th>
+                        <td>{{ network_info.version }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if mining_info %}
+                    <tr>
+                        <th>Algorithm:</th>
+                        <td>{{ mining_info.pow_algo if 'pow_algo' in mining_info else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Difficulty (SHA256D):</th>
+                        <td>{{ "%.8f"|format(mining_info.difficulty_sha256d) if 'difficulty_sha256d' in mining_info else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Difficulty (Scrypt):</th>
+                        <td>{{ "%.8f"|format(mining_info.difficulty_scrypt) if 'difficulty_scrypt' in mining_info else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Difficulty (Groestl):</th>
+                        <td>{{ "%.8f"|format(mining_info.difficulty_groestl) if 'difficulty_groestl' in mining_info else 'N/A' }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-cash"></i> Pending Payments</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_payments %}
+                <p>Total pending: <strong>{{ pending_payments|length }}</strong> payments</p>
+                <p>Total amount: <strong>{{ pending_payments|sum(attribute='amount')|amount }}</strong> TRIN</p>
+                <a href="{{ url_for('admin_payments') }}" class="btn btn-primary">View All Payments</a>
+                {% else %}
+                <p class="text-muted">No pending payments</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Workers -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-people"></i> Top Workers (by Hashrate)</h5>
+            </div>
+            <div class="card-body">
+                {% if workers %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Address</th>
+                                <th>Hashrate</th>
+                                <th>Valid Shares</th>
+                                <th>Pending</th>
+                                <th>Total Paid</th>
+                                <th>Last Seen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for worker in workers[:10] %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td><a href="{{ url_for('worker_stats', address=worker.address) }}">{{ worker.address[:16] }}...</a></td>
+                                <td>{{ worker.hashrate|hashrate }}</td>
+                                <td>{{ worker.valid_shares }}</td>
+                                <td>{{ worker.pending_balance|amount }}</td>
+                                <td>{{ worker.total_paid|amount }}</td>
+                                <td>{{ worker.last_seen|datetime }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                    <a href="{{ url_for('admin_workers') }}" class="btn btn-primary">View All Workers</a>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">No workers yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Blocks -->
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-box"></i> Recent Blocks</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_blocks %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Height</th>
+                                <th>Hash</th>
+                                <th>Finder</th>
+                                <th>Time</th>
+                                <th>Reward</th>
+                                <th>Confirmations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for block in recent_blocks %}
+                            <tr>
+                                <td><a href="{{ url_for('block_detail', block_hash=block.hash) }}">{{ block.height }}</a></td>
+                                <td class="block-hash">{{ block.hash[:24] }}...</td>
+                                <td>
+                                    {% if block.finder %}
+                                    <a href="{{ url_for('worker_stats', address=block.finder) }}">{{ block.finder[:12] }}...</a>
+                                    {% else %}
+                                    N/A
+                                    {% endif %}
+                                </td>
+                                <td>{{ block.timestamp|datetime }}</td>
+                                <td>{{ block.reward|amount }}</td>
+                                <td>{{ block.confirmations }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center">
+                    <a href="{{ url_for('admin_blocks') }}" class="btn btn-primary">View All Blocks</a>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">No blocks found yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

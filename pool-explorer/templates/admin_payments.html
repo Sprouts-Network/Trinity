@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Payments - Admin - Trinity Pool{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Payments Management</h1>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5><i class="bi bi-receipt"></i> Recent Payments</h5>
+    </div>
+    <div class="card-body">
+        {% if payments %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Worker</th>
+                        <th>Amount</th>
+                        <th>Block</th>
+                        <th>Status</th>
+                        <th>TX ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment.timestamp|datetime }}</td>
+                        <td>
+                            {% if payment.worker %}
+                            <a href="{{ url_for('worker_stats', address=payment.worker.address) }}">
+                                {{ payment.worker.address[:20] }}...
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td>{{ payment.amount|amount }} TRIN</td>
+                        <td>{{ payment.block_height }}</td>
+                        <td>
+                            {% if payment.status == 'confirmed' %}
+                            <span class="badge bg-success">Confirmed</span>
+                            {% elif payment.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ payment.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if payment.txid %}
+                            <code>{{ payment.txid[:16] }}...</code>
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-muted">No payments yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

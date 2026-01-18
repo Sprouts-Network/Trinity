@@ -42,7 +42,7 @@ The ISO should include:
 ```ini
 server=1
 rpcuser=trinityuser
-rpcpassword=CHANGE_ME
+rpcpassword=YOUR_SECURE_RPC_PASSWORD_HERE
 rpcallowip=127.0.0.1
 rpcport=62620
 # Optional: enable solo mining on boot
@@ -92,6 +92,7 @@ Write the ISO to a USB drive (replace `/dev/sdX`):
 
 ```bash
 lsblk
+echo "WARNING: double-check /dev/sdX - this will erase the target disk"
 sudo dd if=live-image-amd64.hybrid.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 

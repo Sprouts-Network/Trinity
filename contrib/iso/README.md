@@ -33,9 +33,12 @@ The ISO should include:
 - `/opt/trinity-pool` (copy of `pool-explorer` with a virtualenv)
 - `/etc/trinity/trinity.conf` (RPC enabled)
 - `/etc/trinity/pool.env` (environment file for pool-explorer)
+- `/var/lib/trinity` (data directory, including `trinityd.pid`)
 - Systemd units from this directory:
   - `contrib/iso/trinityd.service`
   - `contrib/iso/trinity-pool.service`
+
+Deploy the repository's `pool-explorer/` directory to `/opt/trinity-pool` so the systemd units align with the packaged path.
 
 ### Example Trinity config (`/etc/trinity/trinity.conf`)
 
@@ -88,12 +91,13 @@ The resulting ISO will be in `live-image-amd64.hybrid.iso`.
 
 ## Bootable USB creation
 
-Write the ISO to a USB drive (replace `/dev/sdX`):
+Write the ISO to a USB drive (replace `/dev/CHANGE_ME`):
 
 ```bash
 lsblk
-echo "WARNING: replace /dev/sdX with your USB device from lsblk; this will erase that disk"
-sudo dd if=live-image-amd64.hybrid.iso of=/dev/sdX bs=4M status=progress oflag=sync
+echo "WARNING: verify lsblk output; using the wrong device will destroy data"
+echo "Replace /dev/CHANGE_ME with your USB device (never your system disk)"
+sudo dd if=live-image-amd64.hybrid.iso of=/dev/CHANGE_ME bs=4M status=progress oflag=sync
 ```
 
 ## Mining modes

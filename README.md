@@ -27,6 +27,10 @@ Trinity now includes a complete mining pool and block explorer solution!
 
 **Quick Start**: See [POOL-DEPLOYMENT.md](POOL-DEPLOYMENT.md) for setup instructions.
 
+### Trinity Linux ISO & Bootable USB
+
+Build a bootable Linux ISO that bundles the Trinity daemon, web GUI, miner management, and explorer API. See [contrib/iso/README.md](contrib/iso/README.md) for the integration guide.
+
 ## Download Windows Executable
 
 ### Quick Download
@@ -123,6 +127,7 @@ This script checks:
 - [Pool Documentation](pool-explorer/README.md) - Comprehensive guide
 - [Quick Start Guide](pool-explorer/QUICKSTART.md) - Fast setup
 - [Mining Configuration](pool-explorer/MINING-GUIDE.md) - Miner setup
+- [Linux ISO & Bootable USB Guide](contrib/iso/README.md) - Integrated ISO/USB build
 
 ## Support
 

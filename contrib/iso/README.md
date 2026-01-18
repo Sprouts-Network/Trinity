@@ -63,6 +63,7 @@ sudo nano /etc/trinity/pool.env
 ```
 
 Replace every `CHANGE_ME` value with secure credentials before enabling the services.
+The `trinity-pool.service` unit loads `/etc/trinity/pool.env` as an optional environment file, so ensure it exists before enabling the service on the ISO.
 
 ## Building the ISO
 

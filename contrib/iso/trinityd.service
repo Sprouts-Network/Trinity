@@ -7,7 +7,7 @@ Type=forking
 User=trinity
 Group=trinity
 PIDFile=/var/lib/trinity/trinityd.pid
-ExecStart=/usr/local/bin/trinityd -daemon -conf=/etc/trinity/trinity.conf -datadir=/var/lib/trinity -pid=/var/lib/trinity/trinityd.pid
+ExecStart=/usr/local/bin/trinityd -daemon -conf=/etc/trinity/trinity.conf -datadir=/var/lib/trinity
 ExecStop=/usr/local/bin/trinity-cli -conf=/etc/trinity/trinity.conf -datadir=/var/lib/trinity stop
 Restart=on-failure
 TimeoutStopSec=60

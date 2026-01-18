@@ -92,7 +92,7 @@ Write the ISO to a USB drive (replace `/dev/sdX`):
 
 ```bash
 lsblk
-echo "WARNING: double-check /dev/sdX - this will erase the target disk"
+echo "WARNING: replace /dev/sdX with your USB device from lsblk; this will erase that disk"
 sudo dd if=live-image-amd64.hybrid.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
@@ -108,6 +108,8 @@ Once the ISO boots and services are enabled:
 - Web UI: `http://<iso-ip>:8080`
 - Admin panel: `http://<iso-ip>:8080/admin`
 - API: `http://<iso-ip>:8080/api/stats`
+
+To expose the web UI on the network, set `WEB_HOST=0.0.0.0` in `/etc/trinity/pool.env` and ensure firewall rules allow `8080` and `3333`.
 
 ## Service enablement
 

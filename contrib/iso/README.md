@@ -45,7 +45,7 @@ Deploy the repository's `pool-explorer/` directory to `/opt/trinity-pool` so the
 ```ini
 server=1
 rpcuser=trinityuser
-rpcpassword=YOUR_SECURE_RPC_PASSWORD_HERE
+rpcpassword=CHANGE_ME_SECURE_RPC_PASSWORD
 rpcallowip=127.0.0.1
 rpcport=62620
 # Optional: enable solo mining on boot
@@ -61,6 +61,8 @@ sudo mkdir -p /etc/trinity
 sudo cp contrib/iso/pool.env.example /etc/trinity/pool.env
 sudo nano /etc/trinity/pool.env
 ```
+
+Replace every `CHANGE_ME` value with secure credentials before enabling the services.
 
 ## Building the ISO
 
@@ -91,13 +93,13 @@ The resulting ISO will be in `live-image-amd64.hybrid.iso`.
 
 ## Bootable USB creation
 
-Write the ISO to a USB drive (replace `/dev/CHANGE_ME`):
+Write the ISO to a USB drive (replace `/dev/YOUR_USB_DEVICE`):
 
 ```bash
 lsblk
 echo "WARNING: verify lsblk output; using the wrong device will destroy data"
-echo "Replace /dev/CHANGE_ME with your USB device (never your system disk)"
-sudo dd if=live-image-amd64.hybrid.iso of=/dev/CHANGE_ME bs=4M status=progress oflag=sync
+echo "Replace /dev/YOUR_USB_DEVICE with your USB device (never your system disk)"
+sudo dd if=live-image-amd64.hybrid.iso of=/dev/YOUR_USB_DEVICE bs=4M status=progress oflag=sync
 ```
 
 ## Mining modes

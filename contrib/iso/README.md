@@ -75,9 +75,12 @@ Run the helper script to build the ISO locally (outputs to `dist/trinity-linux.i
 ./contrib/iso/build-iso.sh
 ```
 
+The script uses `sudo` to run live-build and rsync, so make sure your user has sudo privileges.
+
 ### GitHub Actions workflow
 
 Use the **Build Trinity Linux ISO** workflow in GitHub Actions to build and download the ISO artifact (`trinity-linux-iso`).
+After the workflow completes, open the run summary and download the artifact from the **Artifacts** section.
 
 1. **Create a staging root** (example uses `/tmp/trinity-iso-root`).
 2. **Install Trinity + pool-explorer** inside the staging root.

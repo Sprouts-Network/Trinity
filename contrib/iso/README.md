@@ -76,6 +76,7 @@ Run the helper script to build the ISO locally (outputs to `dist/trinity-linux.i
 ```
 
 The script uses `sudo` to run live-build and rsync, so make sure your user has sudo privileges.
+It writes `dist/iso-credentials.txt` with the generated `RPC_PASSWORD` (override by setting `RPC_PASSWORD`).
 
 ### GitHub Actions workflow
 

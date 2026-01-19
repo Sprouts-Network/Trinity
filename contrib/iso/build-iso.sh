@@ -9,10 +9,10 @@ OUTPUT_DIR="${OUTPUT_DIR:-${REPO_ROOT}/dist}"
 ISO_NAME="${ISO_NAME:-trinity-linux.iso}"
 BUILD_TRINITY="${BUILD_TRINITY:-1}"
 BUILD_JOBS="${BUILD_JOBS:-$(nproc)}"
-RPC_PASSWORD="${RPC_PASSWORD:-CHANGE_ME_SECURE_RPC_PASSWORD}"
+RPC_PASSWORD="${RPC_PASSWORD:-}"
 
-if [[ "${WORKDIR}" != /tmp/* ]]; then
-  echo "WORKDIR must be under /tmp (current: ${WORKDIR})" >&2
+if [[ "${WORKDIR}" != /tmp/* && "${WORKDIR}" != /var/tmp/* ]]; then
+  echo "WORKDIR must be under /tmp or /var/tmp (current: ${WORKDIR})" >&2
   exit 1
 fi
 
@@ -35,6 +35,17 @@ fi
 
 rm -rf "${WORKDIR}"
 mkdir -p "${STAGE_ROOT}" "${OUTPUT_DIR}" "${LIVEBUILD_DIR}"
+
+if [[ -z "${RPC_PASSWORD}" ]]; then
+  RPC_PASSWORD="$(python3 - <<'PY'
+import secrets
+print(secrets.token_hex(16))
+PY
+)"
+fi
+
+printf "RPC_PASSWORD=%s\n" "${RPC_PASSWORD}" > "${OUTPUT_DIR}/iso-credentials.txt"
+echo "RPC password stored in ${OUTPUT_DIR}/iso-credentials.txt" >&2
 
 mkdir -p \
   "${STAGE_ROOT}/etc/systemd/system" \
@@ -75,10 +86,6 @@ rpcport=62620
 TRINITYCONF
 
 sed -i "s#__RPC_PASSWORD__#${RPC_PASSWORD}#" "${STAGE_ROOT}/etc/trinity/trinity.conf"
-
-if [[ "${RPC_PASSWORD}" == "CHANGE_ME_SECURE_RPC_PASSWORD" ]]; then
-  echo "WARNING: Update /etc/trinity/trinity.conf with a secure rpcpassword before booting the ISO." >&2
-fi
 
 cd "${LIVEBUILD_DIR}"
 

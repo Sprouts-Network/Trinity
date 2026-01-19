@@ -58,17 +58,16 @@ if [[ "${BUILD_TRINITY}" == "1" ]]; then
   echo "Building trinityd..."
   if [[ -f "${REPO_ROOT}/src/makefile.unix" ]]; then
     (cd "${REPO_ROOT}/src" && make -f makefile.unix USE_UPNP=- -j"${BUILD_JOBS}")
-  elif [[ -f "${REPO_ROOT}/src/Makefile" ]]; then
-    (cd "${REPO_ROOT}/src" && make USE_UPNP=- -j"${BUILD_JOBS}")
   else
-    echo "No makefile.unix or Makefile found in ${REPO_ROOT}/src" >&2
+    echo "makefile.unix not found; Trinity daemon build requires it (src/Makefile is for LevelDB)." >&2
     exit 1
   fi
   install -m 0755 "${REPO_ROOT}/src/trinityd" "${STAGE_ROOT}/usr/local/bin/trinityd"
   if [[ -f "${REPO_ROOT}/src/trinity-cli" ]]; then
     install -m 0755 "${REPO_ROOT}/src/trinity-cli" "${STAGE_ROOT}/usr/local/bin/trinity-cli"
   else
-    echo "trinity-cli not found; install a CLI binary manually if required." >&2
+    ln -s trinityd "${STAGE_ROOT}/usr/local/bin/trinity-cli"
+    echo "trinity-cli not found; linked trinityd for RPC commands." >&2
   fi
 fi
 

@@ -11,6 +11,8 @@ on:
 jobs:
   build-iso:
     runs-on: ubuntu-22.04 # pinned for live-build/debootstrap compatibility
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

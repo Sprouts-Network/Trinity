@@ -155,8 +155,8 @@ if [[ -d "${REPO_ROOT}/pool-explorer" ]]; then
     set -e
     apt-get update || true
     apt-get install -y python3-venv python3-pip || true
-    python3 -m venv /opt/trinity-pool/.venv
-    . /opt/trinity-pool/.venv/bin/activate
+    python3 -m venv /opt/trinity-pool/venv
+    . /opt/trinity-pool/venv/bin/activate
     if [ -f /opt/trinity-pool/requirements.txt ]; then
       pip install --upgrade pip
       pip install -r /opt/trinity-pool/requirements.txt
@@ -239,8 +239,12 @@ if [[ -n "${USB_DEV}" ]]; then
   fi
   # Determine root disk to avoid nuking system disk
   ROOT_SRC="$(findmnt -n -o SOURCE /)"
-  # Get the base device name (without partition number)
-  ROOT_DISK="$(lsblk -no NAME "${ROOT_SRC}" | sed 's/[0-9]*$//' || echo "")"
+  # Get the parent disk device (handles nvme, sd, etc.)
+  ROOT_DISK="$(lsblk -no PKNAME "${ROOT_SRC}" 2>/dev/null || echo "")"
+  # If PKNAME is empty, try to extract base device name from NAME
+  if [[ -z "${ROOT_DISK}" ]]; then
+    ROOT_DISK="$(lsblk -no NAME "${ROOT_SRC}" | sed 's/[0-9]*$//' || echo "")"
+  fi
   USB_BASENAME="$(basename "${USB_DEV}")"
   if [[ -n "${ROOT_DISK}" && "${USB_BASENAME}" == "${ROOT_DISK}" ]]; then
     echo "ERROR: Selected device appears to be the system/root disk (${USB_DEV}). Aborting."

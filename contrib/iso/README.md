@@ -67,7 +67,25 @@ The `trinity-pool.service` unit loads `/etc/trinity/pool.env` as an optional env
 
 ## Building the ISO
 
-### Automated build script
+### Automated build script (Ubuntu GUI + Qt wallet)
+
+Use the Ubuntu-based GUI ISO build script, which installs a practical lightweight desktop (Xubuntu), Trinity daemon/CLI, the Qt wallet, pool-explorer, and packages everything into a bootable ISO:
+
+```bash
+./contrib/iso/build-ubuntu-gui-iso.sh
+```
+
+Outputs:
+- ISO: `dist/trinity-linux-ubuntu.iso`
+- Credentials: `dist/iso-credentials.txt` (contains the generated `RPC_PASSWORD`; override by setting `RPC_PASSWORD` env var)
+
+Requirements:
+- Run from repo root
+- sudo privileges
+- Ubuntu 24.04 (noble) host recommended (configurable via `UBUNTU_CODENAME`)
+- Desktop flavor can be adjusted by setting `GUI_TASK` (e.g., `ubuntu-desktop`, `ubuntu-desktop-minimal`, `xubuntu-desktop`)
+
+### Automated build script (Debian-based, server-only)
 
 Run the helper script to build the ISO locally (outputs to `dist/trinity-linux.iso` by default):
 

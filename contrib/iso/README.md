@@ -67,6 +67,18 @@ The `trinity-pool.service` unit loads `/etc/trinity/pool.env` as an optional env
 
 ## Building the ISO
 
+### Automated build script
+
+Run the helper script to build the ISO locally (outputs to `dist/trinity-linux.iso` by default):
+
+```bash
+./contrib/iso/build-iso.sh
+```
+
+### GitHub Actions workflow
+
+Use the **Build Trinity Linux ISO** workflow in GitHub Actions to build and download the ISO artifact (`trinity-linux-iso`).
+
 1. **Create a staging root** (example uses `/tmp/trinity-iso-root`).
 2. **Install Trinity + pool-explorer** inside the staging root.
 3. **Copy the systemd unit files** from `contrib/iso/` into `/etc/systemd/system/`.

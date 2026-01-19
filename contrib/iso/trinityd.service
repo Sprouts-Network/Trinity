@@ -1,0 +1,16 @@
+[Unit]
+Description=Trinity Daemon
+After=network.target
+
+[Service]
+Type=forking
+User=trinity
+Group=trinity
+PIDFile=/var/lib/trinity/trinityd.pid
+ExecStart=/usr/local/bin/trinityd -daemon -conf=/etc/trinity/trinity.conf -datadir=/var/lib/trinity
+ExecStop=/usr/local/bin/trinity-cli -conf=/etc/trinity/trinity.conf -datadir=/var/lib/trinity stop
+Restart=on-failure
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target

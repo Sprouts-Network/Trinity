@@ -1,0 +1,17 @@
+[Unit]
+Description=Trinity Mining Pool & Explorer
+After=network.target trinityd.service
+Requires=trinityd.service
+
+[Service]
+Type=simple
+User=trinity
+Group=trinity
+WorkingDirectory=/opt/trinity-pool
+EnvironmentFile=-/etc/trinity/pool.env
+ExecStart=/opt/trinity-pool/venv/bin/python /opt/trinity-pool/app.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

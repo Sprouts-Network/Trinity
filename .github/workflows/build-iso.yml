@@ -1,0 +1,53 @@
+name: Build Trinity Linux ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_trinity:
+        description: "Build Trinity daemon binaries before packaging"
+        required: true
+        default: "1"
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-22.04 # pinned for live-build/debootstrap compatibility
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install ISO build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libboost-all-dev \
+            libssl-dev \
+            libdb++-dev \
+            python3 \
+            python3-venv \
+            python3-pip \
+            live-build \
+            xorriso \
+            squashfs-tools \
+            debootstrap \
+            rsync
+
+      - name: Build ISO
+        env:
+          BUILD_TRINITY: ${{ inputs.build_trinity }}
+          OUTPUT_DIR: dist
+          ISO_NAME: trinity-linux.iso
+        run: |
+          ./contrib/iso/build-iso.sh
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trinity-linux-iso
+          path: |
+            dist/trinity-linux.iso
+            dist/iso-credentials.txt

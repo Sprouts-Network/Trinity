@@ -134,7 +134,7 @@ if [[ -f "${REPO_ROOT}/contrib/iso/pool.env.example" ]]; then
   sudo cp "${REPO_ROOT}/contrib/iso/pool.env.example" "${STAGING_ROOT}/etc/trinity/pool.env"
 else
   echo "==> Creating default /etc/trinity/pool.env"
-  sudo tee "${STAGING_ROOT}/etc/trinity/pool.env" >/dev/null <<'EOF'
+  sudo tee "${STAGING_ROOT}/etc/trinity/pool.env" >/dev/null <<EOF
 # Copy from contrib/iso/pool.env.example in the repo and customize:
 WEB_HOST=0.0.0.0
 WEB_PORT=8080
@@ -142,7 +142,7 @@ STRATUM_PORT=3333
 POOL_ADDRESS=CHANGE_ME_WALLET_ADDRESS
 POOL_FEE=0
 RPC_USER=trinityuser
-RPC_PASSWORD=CHANGE_ME
+RPC_PASSWORD=${RPC_PASSWORD}
 EOF
 fi
 
@@ -239,9 +239,10 @@ if [[ -n "${USB_DEV}" ]]; then
   fi
   # Determine root disk to avoid nuking system disk
   ROOT_SRC="$(findmnt -n -o SOURCE /)"
-  ROOT_PKNAME="$(lsblk -no PKNAME "${ROOT_SRC}")"
+  # Get the base device name (without partition number)
+  ROOT_DISK="$(lsblk -no NAME "${ROOT_SRC}" | sed 's/[0-9]*$//' || echo "")"
   USB_BASENAME="$(basename "${USB_DEV}")"
-  if [[ "${USB_BASENAME}" == "${ROOT_PKNAME}" ]]; then
+  if [[ -n "${ROOT_DISK}" && "${USB_BASENAME}" == "${ROOT_DISK}" ]]; then
     echo "ERROR: Selected device appears to be the system/root disk (${USB_DEV}). Aborting."
     exit 1
   fi
@@ -249,8 +250,11 @@ if [[ -n "${USB_DEV}" ]]; then
   read -rp "Type YES to confirm writing ${OUTPUT_ISO} to ${USB_DEV}: " CONFIRM
   if [[ "${CONFIRM}" == "YES" ]]; then
     echo "==> Unmounting any partitions on ${USB_DEV}"
-    for p in $(lsblk -np "${USB_DEV}" | awk 'NR>1{print $1}'); do
-      sudo umount -f "${p}" 2>/dev/null || true
+    # Get all mounted partitions for this device and unmount them
+    lsblk -lno NAME,MOUNTPOINT "${USB_DEV}" 2>/dev/null | while read -r name mount; do
+      if [[ -n "${mount}" ]]; then
+        sudo umount -f "/dev/${name}" 2>/dev/null || true
+      fi
     done
     echo "==> Writing ISO to ${USB_DEV} (this may take a while)"
     sudo dd if="${OUTPUT_ISO}" of="${USB_DEV}" bs=4M status=progress oflag=sync conv=fsync

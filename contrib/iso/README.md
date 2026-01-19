@@ -67,6 +67,24 @@ The `trinity-pool.service` unit loads `/etc/trinity/pool.env` as an optional env
 
 ## Building the ISO
 
+### Automated build script (Ubuntu GUI + Qt wallet)
+
+Use the Ubuntu-based GUI ISO build script, which installs a practical lightweight desktop (Xubuntu), Trinity daemon/CLI, the Qt wallet, pool-explorer, and packages everything into a bootable ISO. After building, the script will offer to write the ISO to a USB drive and prompt you to select the target device.
+
+```bash
+./contrib/iso/build-ubuntu-gui-iso.sh
+```
+
+Outputs:
+- ISO: `dist/trinity-linux-ubuntu.iso`
+- Credentials: `dist/iso-credentials.txt` (contains the generated `RPC_PASSWORD`; override by setting `RPC_PASSWORD` env var)
+
+Requirements:
+- Run from repo root
+- sudo privileges
+- Ubuntu 24.04 (noble) host recommended (configurable via `UBUNTU_CODENAME`)
+- Desktop flavor can be adjusted by setting `GUI_TASK` (e.g., `ubuntu-desktop`, `ubuntu-desktop-minimal`, `xubuntu-desktop`)
+
 ### Automated build script
 
 Run the helper script to build the ISO locally (outputs to `dist/trinity-linux.iso` by default):
@@ -108,7 +126,11 @@ sudo lb build
 
 The resulting ISO will be in `live-image-amd64.hybrid.iso`.
 
-## Bootable USB creation
+## Bootable USB creation (interactive)
+
+After the ISO is built, the script lists removable USB devices and prompts you to select one to write the ISO. This step is optional—press Enter to skip. If you choose a device, the script asks you to type `YES` to confirm before running `dd`. Selecting the wrong device will destroy data on that device, so review the list carefully.
+
+## Bootable USB creation (manual)
 
 Write the ISO to a USB drive (replace `/dev/YOUR_USB_DEVICE`):
 

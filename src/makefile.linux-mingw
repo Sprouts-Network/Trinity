@@ -95,6 +95,7 @@ OBJS= \
     obj/leveldb.o \
     obj/txdb.o \
     obj/chainparams.o \
+    obj/fees.o \
     obj/scrypt.o \
     obj/blake.o \
     obj/bmw.o \

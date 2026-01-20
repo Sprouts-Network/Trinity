@@ -22,6 +22,9 @@
 #     ./dist/linux/trinityd, ./dist/linux/trinity-cli, ./dist/linux/Trinity-qt
 #   and the script will copy them.
 set -euo pipefail
+# Enable debug tracing and helpful error trap to aid debugging
+set -x
+trap 'echo "FAILED at line $LINENO with exit code $?"' ERR
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 UBUNTU_CODENAME="${UBUNTU_CODENAME:-noble}"
@@ -49,7 +52,8 @@ sudo apt-get install -y \
 # Generate or capture RPC password
 RPC_PASSWORD="${RPC_PASSWORD:-}"
 if [[ -z "${RPC_PASSWORD}" ]]; then
-  RPC_PASSWORD="$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)"
+  # Read a limited number of bytes from /dev/urandom and filter to alphanumerics to avoid hanging
+  RPC_PASSWORD="$(head -c 4096 /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 24)"
 fi
 printf "RPC_PASSWORD=%s\n" "${RPC_PASSWORD}" > "${ISO_CREDENTIALS}"
 echo "==> Wrote ${ISO_CREDENTIALS}"
@@ -69,7 +73,7 @@ if [[ -f "${REPO_ROOT}/autogen.sh" ]]; then
   build_from_source=true
 fi
 
-if "${build_from_source}"; then
+if [[ "${build_from_source}" == "true" ]]; then
   echo "==> Building Trinity from source"
   pushd "${REPO_ROOT}"
   bash autogen.sh

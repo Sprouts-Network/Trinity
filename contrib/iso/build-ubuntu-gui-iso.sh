@@ -23,6 +23,12 @@
 #   and the script will copy them.
 set -euo pipefail
 
+# Optional debug tracing (enable by setting ISO_DEBUG=1 in environment)
+if [[ "${ISO_DEBUG:-0}" == "1" ]]; then
+  set -x
+  trap 'echo "FAILED at line $LINENO with exit code $?"; exit 1' ERR
+fi
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 UBUNTU_CODENAME="${UBUNTU_CODENAME:-noble}"
 GUI_TASK="${GUI_TASK:-xubuntu-desktop}"
@@ -49,7 +55,9 @@ sudo apt-get install -y \
 # Generate or capture RPC password
 RPC_PASSWORD="${RPC_PASSWORD:-}"
 if [[ -z "${RPC_PASSWORD}" ]]; then
-  RPC_PASSWORD="$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)"
+  # Read a limited number of bytes from /dev/urandom then filter to alphanumerics.
+  # Using head -c ensures tr does not try to process an unbounded stream which may appear to hang.
+  RPC_PASSWORD="$(head -c 4096 /dev/urandom | tr -dc 'A-Za-z0-9' | head -c 24)"
 fi
 printf "RPC_PASSWORD=%s\n" "${RPC_PASSWORD}" > "${ISO_CREDENTIALS}"
 echo "==> Wrote ${ISO_CREDENTIALS}"
@@ -69,7 +77,8 @@ if [[ -f "${REPO_ROOT}/autogen.sh" ]]; then
   build_from_source=true
 fi
 
-if "${build_from_source}"; then
+# Explicit boolean test instead of executing the variable
+if [[ "${build_from_source}" == "true" ]]; then
   echo "==> Building Trinity from source"
   pushd "${REPO_ROOT}"
   bash autogen.sh
@@ -270,6 +279,10 @@ if [[ -n "${USB_DEV}" ]]; then
 else
   echo "No USB device selected; skipping write step."
 fi
+
+echo "==> Completed."
+echo "Web UI will be available at http://<iso-ip>:8080"
+echo "Qt wallet installed as /usr/local/bin/Trinity-qt and menu entry Trinity Wallet (Qt)"
 
 echo "==> Completed."
 echo "Web UI will be available at http://<iso-ip>:8080"
